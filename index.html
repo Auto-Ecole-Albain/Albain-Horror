@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0810">
+<title>ALBAIN HORROR</title>
+<style>
+:root{
+  --bg:#08060c; --bg2:#120d1c; --panel:#171126ee; --panel2:#1d1730;
+  --accent:#8b3cf5; --accent2:#c93cf5; --danger:#c22b3c; --danger2:#ff4d5e;
+  --text:#e9e3f7; --textdim:#9c93b8; --gold:#e8c65a; --good:#3fcf7f;
+  --fog-opacity:.35; --radius:14px; --fsz:1rem;
+  --shadow: 0 10px 40px rgba(0,0,0,.6);
+}
+body.halloween{
+  --bg:#0b0500; --bg2:#170a02; --panel:#1c0f04ee; --panel2:#26150a;
+  --accent:#ff7a1a; --accent2:#ffb300; --danger:#8b1e1e; --danger2:#ff4d1a;
+  --gold:#ffb300; --good:#7ee06b;
+}
+body.contrast-high{
+  --text:#ffffff; --textdim:#dcdcdc; --panel:#000000f0; --panel2:#0d0d0d;
+}
+body.text-large{ --fsz:1.18rem; }
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  margin:0; background:radial-gradient(ellipse at 50% 0%, var(--bg2), var(--bg) 70%);
+  color:var(--text); font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  font-size:var(--fsz); overflow-x:hidden; min-height:100vh;
+  -webkit-user-select:none; user-select:none;
+}
+#app{ min-height:100vh; display:flex; flex-direction:column; position:relative; }
+
+/* ---------- fog / rain / particles overlays ---------- */
+#fx-layer{position:fixed; inset:0; pointer-events:none; z-index:5; overflow:hidden;}
+.fog{position:absolute; inset:-20% -20%; background:
+  radial-gradient(ellipse at 20% 80%, rgba(139,60,245,.10), transparent 60%),
+  radial-gradient(ellipse at 80% 20%, rgba(0,0,0,.4), transparent 60%);
+  opacity:var(--fog-opacity); animation:drift 40s linear infinite;}
+body.halloween .fog{background:
+  radial-gradient(ellipse at 20% 80%, rgba(255,122,26,.12), transparent 60%),
+  radial-gradient(ellipse at 80% 20%, rgba(0,0,0,.5), transparent 60%);}
+@keyframes drift{0%{transform:translate(0,0)}50%{transform:translate(-3%,2%)}100%{transform:translate(0,0)}}
+.rain{position:absolute; inset:0; background-image:repeating-linear-gradient(100deg, rgba(200,200,255,.07) 0 1px, transparent 1px 40px); animation:rainfall .35s linear infinite; opacity:.5;}
+@keyframes rainfall{from{background-position-y:0}to{background-position-y:40px}}
+.grain{position:absolute; inset:0; opacity:.045; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");}
+.vignette{position:absolute; inset:0; box-shadow:inset 0 0 220px rgba(0,0,0,.85);}
+.flicker{animation:flick 6s infinite;}
+@keyframes flick{0%,19%,21%,23%,55%,100%{opacity:1}20%,22%,54%{opacity:.75}}
+.reduce-fx .fog,.reduce-fx .rain,.reduce-fx .grain{display:none;}
+
+.pumpkin,.leaf,.bat{position:absolute; pointer-events:none; opacity:.85; filter:drop-shadow(0 0 8px rgba(255,150,30,.5));}
+@keyframes floaty{0%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-14px) rotate(4deg)}100%{transform:translateY(0) rotate(0deg)}}
+@keyframes fall{0%{transform:translateY(-10vh) translateX(0) rotate(0)}100%{transform:translateY(110vh) translateX(40px) rotate(360deg)}}
+
+/* ---------- layout ---------- */
+.screen{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px 16px 40px; position:relative; z-index:10; min-height:100vh;}
+.wrap{ width:100%; max-width:640px; }
+
+/* Title */
+.title-main{ text-align:center; margin-bottom:6px; }
+.title-main h1{
+  font-size:clamp(2.1rem,9vw,3.4rem); margin:0; letter-spacing:3px;
+  color:var(--gold); text-shadow:0 0 18px var(--accent2), 0 0 40px rgba(0,0,0,.8);
+  font-weight:800;
+}
+.title-main .sub{ color:var(--textdim); font-style:italic; margin-top:6px; font-size:.95rem; letter-spacing:1px;}
+
+/* Buttons */
+.btn{
+  display:block; width:100%; text-align:center; padding:16px 18px; margin:9px 0;
+  background:linear-gradient(180deg,var(--panel2),var(--panel)); color:var(--text);
+  border:1px solid rgba(255,255,255,.08); border-radius:var(--radius); font-size:1.02rem;
+  cursor:pointer; letter-spacing:.5px; touch-action:manipulation; font-weight:600;
+  box-shadow:0 4px 14px rgba(0,0,0,.4); transition:transform .12s, box-shadow .12s, border-color .12s;
+  min-height:52px;
+}
+.btn:active{ transform:scale(.97); }
+.btn.primary{ background:linear-gradient(180deg,var(--accent2),var(--accent)); border-color:transparent; color:#100518;}
+.btn.ghost{ background:transparent; border:1px solid rgba(255,255,255,.15); }
+.btn.small{ padding:10px 12px; font-size:.85rem; min-height:40px;}
+.btn.danger{ background:linear-gradient(180deg,var(--danger2),var(--danger)); border-color:transparent;}
+.btn:disabled{ opacity:.4; pointer-events:none; }
+.btn-row{ display:flex; gap:10px; }
+.btn-row .btn{ flex:1; }
+
+.menu-badge{ text-align:center; color:var(--gold); font-size:.8rem; margin-bottom:14px; letter-spacing:2px; opacity:.8;}
+
+/* Panel / card */
+.panel{ background:var(--panel); border:1px solid rgba(255,255,255,.07); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); backdrop-filter:blur(6px);}
+.panel h2{ margin-top:0; color:var(--gold); letter-spacing:1px; font-size:1.15rem;}
+.panel h3{ color:var(--accent2); margin:14px 0 6px; font-size:1rem;}
+.small-note{ color:var(--textdim); font-size:.82rem; line-height:1.4;}
+
+/* HUD */
+.hud{ display:flex; align-items:center; justify-content:space-between; width:100%; max-width:640px; margin-bottom:14px; gap:10px; flex-wrap:wrap;}
+.hearts{ font-size:1.3rem; letter-spacing:3px;}
+.hud .badge{ background:var(--panel2); padding:6px 12px; border-radius:20px; font-size:.82rem; border:1px solid rgba(255,255,255,.08);}
+.progressbar{ height:6px; width:100%; background:#1b1526; border-radius:6px; overflow:hidden; margin:8px 0 16px;}
+.progressbar > div{ height:100%; background:linear-gradient(90deg,var(--accent),var(--gold)); transition:width .4s; }
+
+/* ============ Cinematic engine (parallax / Ken Burns / particules / secousses) ============ */
+.cine{ position:fixed; inset:0; background:#000; z-index:200; overflow:hidden; }
+.cine-stage{ position:absolute; inset:0; overflow:hidden; }
+.cine-stage.shake-active{ animation:camshake .5s; }
+@keyframes camshake{
+  0%{transform:translate(0,0)} 10%{transform:translate(-6px,3px)} 20%{transform:translate(5px,-4px)}
+  30%{transform:translate(-4px,4px)} 40%{transform:translate(6px,-2px)} 50%{transform:translate(-3px,3px)}
+  60%{transform:translate(4px,-3px)} 70%{transform:translate(-2px,2px)} 80%{transform:translate(3px,-1px)}
+  90%{transform:translate(-1px,1px)} 100%{transform:translate(0,0)}
+}
+.cine-layer-far,.cine-layer-near{ position:absolute; inset:-6%; width:112%; height:112%; }
+.cine-layer-far svg,.cine-layer-near svg{ width:100%; height:100%; display:block; }
+.cine-layer-far{ z-index:1; opacity:.85; }
+.cine-layer-near{ z-index:2; }
+.kenburns-a{ animation:kbA 16s ease-in-out infinite alternate; }
+.kenburns-b{ animation:kbB 13s ease-in-out infinite alternate; }
+@keyframes kbA{ from{transform:scale(1) translate(0,0)} to{transform:scale(1.1) translate(-2%,-1%)} }
+@keyframes kbB{ from{transform:scale(1.04) translate(1%,0)} to{transform:scale(1.18) translate(-1.5%,-2%)} }
+.reduce-fx .kenburns-a,.reduce-fx .kenburns-b{ animation:none !important; }
+.cine-photo{ position:absolute; inset:-6%; width:112%; height:112%; object-fit:cover; z-index:3; filter:brightness(.72) saturate(1.05); background:#000; opacity:0; transition:opacity .5s ease; }
+.cine-photo.kb{ animation:kbPhoto 6.5s ease-out forwards; }
+@keyframes kbPhoto{ from{transform:scale(1.04)} to{transform:scale(1.14)} }
+.reduce-fx .cine-photo{ filter:brightness(.8) saturate(1.02); }
+.reduce-fx .cine-photo.kb{ animation:none !important; }
+.cine-particles-canvas{ position:absolute; inset:0; z-index:5; pointer-events:none; width:100%; height:100%;}
+.cine-vignette-local{ position:absolute; inset:0; z-index:6; pointer-events:none; box-shadow:inset 0 0 26vw rgba(0,0,0,.85); background:radial-gradient(ellipse at 50% 40%, transparent 40%, rgba(0,0,0,.5) 100%);}
+.cine .radio{ color:var(--gold); font-weight:700; letter-spacing:1px; }
+.cine-subtitle-wrap{ position:absolute; left:0; right:0; bottom:12%; z-index:15; display:flex; justify-content:center; padding:0 22px; pointer-events:none;}
+.cine-subtitle{ max-width:680px; text-align:center; padding:12px 18px; border-radius:10px;
+  font-size:clamp(1.02rem,4.4vw,1.45rem); line-height:1.55; color:var(--text);
+  background:linear-gradient(180deg, transparent, rgba(0,0,0,.6) 35%);
+  opacity:0; transform:translateY(10px); animation:subIn .7s forwards; text-shadow:0 2px 10px rgba(0,0,0,.9);}
+.cine-subtitle.radio{ color:var(--gold); }
+@keyframes subIn{ to{opacity:1; transform:translateY(0);} }
+.cine .skip{ position:absolute; bottom:26px; right:26px; z-index:30; color:var(--textdim); font-size:.85rem; border:1px solid rgba(255,255,255,.25); padding:8px 16px; border-radius:20px; cursor:pointer; background:rgba(0,0,0,.35);}
+.cine .levellabel{ position:absolute; top:34px; left:50%; transform:translateX(-50%); z-index:22; color:var(--accent2); letter-spacing:3px; font-size:.8rem; text-transform:uppercase; text-shadow:0 2px 8px rgba(0,0,0,.9);}
+.cine .lightning{ position:absolute; inset:0; z-index:40; background:#fff; opacity:0; pointer-events:none;}
+.cine .lightning.on{ animation:strike .22s;}
+@keyframes strike{0%{opacity:.92}100%{opacity:0}}
+.cine-bar{ position:absolute; left:0; right:0; height:0; background:#000; z-index:25; transition:height .55s ease; pointer-events:none;}
+.cine-bar.top{ top:0; } .cine-bar.bottom{ bottom:0; }
+.cine.letterboxed .cine-bar{ height:8.5%; }
+.clockbig{ font-size:clamp(2rem,10vw,4rem); font-weight:800; color:var(--gold); letter-spacing:4px; text-shadow:0 0 30px var(--accent2);}
+
+/* Question / gameplay */
+.scene-flavor{ color:var(--textdim); font-style:italic; margin-bottom:10px; line-height:1.5; font-size:.92rem; border-left:3px solid var(--accent); padding-left:12px;}
+.question-cat{ display:inline-block; font-size:.72rem; letter-spacing:1px; padding:3px 10px; border-radius:20px; margin-bottom:10px; }
+.question-cat.route{ background:#2a1c46; color:#c9a6ff;}
+.question-cat.secours{ background:#3a1414; color:#ff9c9c;}
+.question-text{ font-size:1.12rem; font-weight:600; margin-bottom:16px; line-height:1.4;}
+.answers{ display:flex; flex-direction:column; gap:10px;}
+.ans-btn{
+  text-align:left; padding:14px 16px; border-radius:12px; border:1px solid rgba(255,255,255,.12);
+  background:var(--panel2); color:var(--text); cursor:pointer; font-size:.98rem; line-height:1.35;
+  min-height:52px; display:flex; align-items:center; gap:10px; transition:all .15s;
+}
+.ans-btn:active{ transform:scale(.985); }
+.ans-btn .letter{ background:rgba(255,255,255,.08); border-radius:50%; width:26px; height:26px; min-width:26px; display:flex; align-items:center; justify-content:center; font-size:.78rem; font-weight:700;}
+.ans-btn.correct{ background:#153a24; border-color:var(--good); }
+.ans-btn.wrong{ background:#3a1418; border-color:var(--danger2); }
+.ans-btn.disabled{ opacity:.55; pointer-events:none; }
+
+.feedback{ margin-top:16px; padding:16px; border-radius:12px; }
+.feedback.ok{ background:#0f2a1c; border:1px solid var(--good); }
+.feedback.ko{ background:#2a0f14; border:1px solid var(--danger2); }
+.feedback .head{ font-weight:800; letter-spacing:1px; margin-bottom:6px;}
+.feedback .head.ok{ color:var(--good);}
+.feedback .head.ko{ color:var(--danger2);}
+.feedback .exp{ font-size:.92rem; line-height:1.5; color:var(--text);}
+
+.streak{ color:var(--gold); font-size:.85rem; text-align:center; margin-top:8px; min-height:18px;}
+
+/* Defeat/Victory */
+.bigicon{ font-size:3.4rem; text-align:center; margin-bottom:8px;}
+.stat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0;}
+.stat-box{ background:var(--panel2); border-radius:10px; padding:12px; text-align:center;}
+.stat-box .val{ font-size:1.4rem; font-weight:800; color:var(--gold);}
+.stat-box .lab{ font-size:.72rem; color:var(--textdim); letter-spacing:.5px;}
+
+/* Settings */
+.setting-row{ display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.06); gap:10px;}
+.setting-row label{ font-size:.92rem;}
+input[type=range]{ width:130px; accent-color:var(--accent2);}
+.toggle{ width:50px; height:28px; border-radius:16px; background:#2a2340; position:relative; cursor:pointer; border:1px solid rgba(255,255,255,.1); flex-shrink:0;}
+.toggle.on{ background:var(--accent);}
+.toggle span{ position:absolute; top:2px; left:2px; width:22px; height:22px; border-radius:50%; background:#fff; transition:left .18s;}
+.toggle.on span{ left:24px;}
+.seg{ display:flex; gap:6px; }
+.seg button{ flex:1; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,.12); background:var(--panel2); color:var(--textdim); font-size:.8rem; cursor:pointer;}
+.seg button.active{ background:var(--accent); color:#fff; border-color:transparent;}
+
+.top-back{ position:fixed; top:14px; left:14px; z-index:60; background:var(--panel2); border:1px solid rgba(255,255,255,.15); border-radius:20px; padding:8px 14px; font-size:.85rem; cursor:pointer; color:var(--text);}
+
+.modal-bg{ position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:300; display:flex; align-items:center; justify-content:center; padding:20px;}
+.modal{ background:var(--panel); border:1px solid rgba(255,255,255,.12); border-radius:14px; padding:22px; max-width:420px; width:100%;}
+
+.orient-hint{ position:fixed; bottom:16px; left:50%; transform:translateX(-50%); background:var(--panel2); border:1px solid var(--accent); padding:10px 16px; border-radius:20px; font-size:.8rem; z-index:250; display:none;}
+@media (orientation:portrait){ body.suggest-landscape .orient-hint{display:block;} }
+
+.collection-item{ background:var(--panel2); border-radius:10px; padding:12px 14px; margin-bottom:8px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;}
+.collection-item.locked{ opacity:.4; cursor:default;}
+
+footer.credits{ text-align:center; color:var(--textdim); font-size:.7rem; margin-top:18px; opacity:.6;}
+
+@media (min-width:700px){
+  .wrap{ max-width:680px; }
+}
+</style>
+</head>
+<body>
+<div id="fx-layer">
+  <div class="fog flicker"></div>
+  <div class="rain" id="fxRain"></div>
+  <div class="grain"></div>
+  <div class="vignette"></div>
+  <div id="fxHalloweenExtra"></div>
+</div>
+<div class="orient-hint" id="orientHint">📱 Tournez votre téléphone pour une meilleure expérience</div>
+<div id="app"></div>
+
+<script>
+/* =========================================================================
+   ALBAIN HORROR — moteur de jeu (single-file)
+   Contenu pédagogique extrait fidèlement du "Livret de Vérifications BMW
+   Série 1" (questions Sécurité Routière / QSER et Premiers Secours / 1erS).
+   ========================================================================= */
+
+/* --------------------------- BASE DE QUESTIONS --------------------------- */
+// cat: 'route' (sécurité routière) | 'secours' (premiers secours)
+const QUESTIONS = [
+// ---- SÉCURITÉ ROUTIÈRE ----
+{id:'r1',cat:'route',dif:1,
+ q:"Pourquoi doit-on régler la hauteur des feux avant de circuler ?",
+ a:["Pour ne pas éblouir les autres usagers.","Pour économiser la batterie du véhicule.","Pour améliorer la consommation de carburant.","Pour activer automatiquement le régulateur de vitesse."],
+ c:0, exp:"Un mauvais réglage de la hauteur des feux peut éblouir les autres usagers de la route."},
+{id:'r2',cat:'route',dif:1,
+ q:"Comment peut-on détecter l'usure des balais d'essuie-glaces en circulation ?",
+ a:["En cas de pluie, lorsqu'ils laissent des traces sur le pare-brise.","Lorsqu'ils font du bruit au démarrage du moteur.","Lorsque le voyant moteur s'allume.","Ils ne s'usent jamais, seul un contrôle visuel compte."],
+ c:0, exp:"Des traces laissées sur le pare-brise par temps de pluie signalent des balais usés, source de mauvaise visibilité."},
+{id:'r3',cat:'route',dif:1,
+ q:"Quelle peut être la conséquence d'une panne de dégivrage de la lunette arrière ?",
+ a:["Une insuffisance ou une absence de visibilité vers l'arrière.","Une surchauffe du moteur.","Un déclenchement intempestif des airbags.","Une décharge rapide de la batterie."],
+ c:0, exp:"Sans dégivrage fonctionnel, la visibilité vers l'arrière du véhicule peut être insuffisante, voire nulle."},
+{id:'r4',cat:'route',dif:1,
+ q:"Dans quels cas doit-on utiliser les feux de détresse ?",
+ a:["En cas de panne, d'accident, ou de ralentissement important.","Uniquement la nuit, en agglomération.","Pour se garer sur une place réservée.","À chaque changement de direction."],
+ c:0, exp:"Les feux de détresse signalent une panne, un accident ou un ralentissement important aux autres usagers."},
+{id:'r5',cat:'route',dif:2,
+ q:"Sans actionner la commande du régulateur de vitesse, comment le désactiver rapidement ?",
+ a:["En appuyant sur la pédale de frein ou d'embrayage.","En coupant complètement le contact.","En actionnant les feux de détresse.","En relâchant l'accélérateur durant 10 secondes."],
+ c:0, exp:"Une simple pression sur le frein ou l'embrayage désactive immédiatement le régulateur de vitesse."},
+{id:'r6',cat:'route',dif:1,
+ q:"Dans quel cas peut-on utiliser l'avertisseur sonore en agglomération ?",
+ a:["En cas de danger immédiat.","Pour saluer un autre conducteur.","Pour signaler un dépassement de nuit.","À n'importe quel moment de la journée."],
+ c:0, exp:"En agglomération, l'avertisseur sonore ne doit être utilisé qu'en cas de danger immédiat."},
+{id:'r7',cat:'route',dif:2,
+ q:"Dans quelle situation doit-on désactiver l'airbag du passager avant ?",
+ a:["Lors du transport d'un enfant à l'avant, dans un siège auto dos à la route.","Lorsqu'il pleut fortement.","Lorsque le véhicule roule sur autoroute.","Lorsque la ceinture arrière n'est pas bouclée."],
+ c:0, exp:"Un airbag actif face à un siège dos à la route en cas de choc peut gravement blesser l'enfant : il faut le désactiver."},
+{id:'r8',cat:'route',dif:1,
+ q:"Peut-on utiliser les feux de brouillard arrière par forte pluie ?",
+ a:["Non.","Oui, systématiquement.","Oui, mais seulement la nuit.","Uniquement sur autoroute."],
+ c:0, exp:"Les feux de brouillard arrière sont réservés aux situations de brouillard ou de neige, pas à la forte pluie."},
+{id:'r9',cat:'route',dif:1,
+ q:"Quel est le risque de maintenir les feux de route allumés lors d'un croisement avec d'autres usagers ?",
+ a:["Un risque d'éblouissement des autres usagers.","Une décharge de la batterie.","Un risque de surchauffe des phares.","Aucun risque particulier."],
+ c:0, exp:"Les feux de route doivent être basculés en feux de croisement pour ne pas éblouir les usagers croisés."},
+{id:'r10',cat:'route',dif:1,
+ q:"Quelle est l'utilité d'un limiteur de vitesse ?",
+ a:["Ne pas dépasser la vitesse programmée par le conducteur.","Maintenir automatiquement une vitesse constante.","Réduire la consommation de carburant.","Empêcher le démarrage au-delà d'une certaine vitesse du vent."],
+ c:0, exp:"Le limiteur de vitesse empêche le véhicule de dépasser la vitesse choisie par le conducteur, sans la maintenir constante."},
+{id:'r11',cat:'route',dif:1,
+ q:"En cas de panne ou d'accident, quel accessoire de sécurité est obligatoire en plus du gilet de haute visibilité ?",
+ a:["Le triangle de présignalisation.","Une trousse de secours.","Un extincteur.","Une couverture de survie."],
+ c:0, exp:"Le triangle de présignalisation est l'autre accessoire de sécurité obligatoire en cas de panne ou d'accident."},
+{id:'r12',cat:'route',dif:2,
+ q:"À partir de quel taux d'alcool est-on en infraction en période de permis probatoire ?",
+ a:["0,20 g/l de sang, c'est-à-dire 0 verre.","0,50 g/l de sang, soit environ 2 verres.","0,80 g/l de sang, soit environ 3 verres.","1,00 g/l de sang, soit environ 4 verres."],
+ c:0, exp:"En période probatoire, le seuil est de 0,20 g/l de sang : dès le premier verre, ce seuil peut être dépassé."},
+{id:'r13',cat:'route',dif:1,
+ q:"En cas d'accident, dans quel délai le constat amiable doit-il être transmis à l'assureur ?",
+ a:["5 jours.","48 heures.","10 jours.","1 mois."],
+ c:0, exp:"Le constat amiable doit être transmis à l'assureur dans un délai de 5 jours."},
+{id:'r14',cat:'route',dif:1,
+ q:"Pourquoi est-il important de bien régler son volant ?",
+ a:["Pour le confort de conduite, l'accessibilité aux commandes et l'efficacité des airbags.","Pour éviter la formation de buée sur le pare-brise.","Pour réduire la consommation de carburant.","Pour activer automatiquement le régulateur de vitesse."],
+ c:0, exp:"Un bon réglage du volant assure confort, accessibilité aux commandes, visibilité du tableau de bord et efficacité des airbags."},
+{id:'r15',cat:'route',dif:2,
+ q:"Peut-on fixer tous types de sièges enfant sur des attaches de type Isofix ?",
+ a:["Non, uniquement ceux compatibles avec ce type d'attache.","Oui, tous les modèles sont compatibles.","Non, les attaches Isofix sont réservées aux adultes.","Oui, mais uniquement à l'avant du véhicule."],
+ c:0, exp:"Seuls les sièges enfant compatibles avec le système Isofix peuvent y être fixés."},
+{id:'r16',cat:'route',dif:1,
+ q:"En règle générale, à partir de quel âge un enfant peut-il être installé sur le siège passager avant ?",
+ a:["10 ans.","6 ans.","13 ans.","16 ans."],
+ c:0, exp:"En règle générale, un enfant peut être installé à l'avant à partir de 10 ans."},
+{id:'r17',cat:'route',dif:2,
+ q:"Quelle est la différence entre un voyant orange et un voyant rouge ?",
+ a:["Le rouge signale une anomalie ou un danger, l'orange un élément important.","L'orange signale un danger immédiat, le rouge une simple information.","Il n'y a aucune différence de gravité entre les deux.","Le rouge concerne uniquement les pneumatiques."],
+ c:0, exp:"Rouge = anomalie de fonctionnement ou danger. Orange = élément important à surveiller."},
+{id:'r18',cat:'route',dif:1,
+ q:"À quelle fréquence est-il préconisé de vérifier la pression des pneumatiques ?",
+ a:["Tous les mois, ou avant un long trajet.","Une fois par an.","Uniquement lors du contrôle technique.","Tous les 6 mois."],
+ c:0, exp:"Il est recommandé de vérifier la pression des pneumatiques chaque mois et avant chaque long trajet."},
+{id:'r19',cat:'route',dif:2,
+ q:"Qu'est-ce que l'aquaplanage, et quelle peut en être la conséquence ?",
+ a:["La présence d'un film d'eau entre le pneumatique et la chaussée, pouvant entraîner une perte de contrôle.","Une surchauffe du moteur due à l'humidité ambiante.","Un dysfonctionnement des feux de brouillard.","Un excès de pression dans les pneumatiques."],
+ c:0, exp:"L'aquaplanage correspond à un film d'eau qui s'interpose entre le pneu et la route, pouvant faire perdre le contrôle du véhicule."},
+{id:'r20',cat:'route',dif:1,
+ q:"Quel est le principal risque d'un manque d'huile moteur ?",
+ a:["Un risque de détérioration ou de casse du moteur.","Un risque de crevaison.","Une décharge rapide de la batterie.","Un dérèglement du limiteur de vitesse."],
+ c:0, exp:"Un niveau d'huile insuffisant expose le moteur à une détérioration, voire à une casse."},
+{id:'r21',cat:'route',dif:1,
+ q:"Quelles sont les précautions à prendre lors du remplissage du réservoir de carburant ?",
+ a:["Arrêter le moteur, ne pas fumer, ne pas téléphoner.","Laisser le moteur tourner pour gagner du temps.","Allumer les feux de détresse pendant le remplissage.","Aucune précaution particulière n'est nécessaire."],
+ c:0, exp:"Lors du remplissage, il faut arrêter le moteur, ne pas fumer et ne pas téléphoner."},
+{id:'r22',cat:'route',dif:2,
+ q:"Quel est le risque de circuler avec un frein de parking mal desserré ?",
+ a:["Une dégradation du système de freinage.","Une consommation de carburant réduite.","Un déclenchement des feux de détresse.","Aucun risque, le frein de parking est indépendant."],
+ c:0, exp:"Circuler frein de parking mal desserré dégrade le système de freinage."},
+// ---- PREMIERS SECOURS ----
+{id:'s1',cat:'secours',dif:1,
+ q:"Comment et pourquoi protéger une zone de danger en cas d'accident de la route ?",
+ a:["En délimitant clairement et largement la zone de danger, de façon visible, pour protéger les victimes et éviter un suraccident.","En déplaçant immédiatement tous les véhicules impliqués.","En appelant uniquement les secours, sans autre action.","En attendant l'arrivée de la police avant toute action."],
+ c:0, exp:"Il faut délimiter clairement et largement la zone de danger, de façon visible, pour protéger les victimes et éviter un suraccident."},
+{id:'s2',cat:'secours',dif:1,
+ q:"Comment vérifier la respiration d'une victime ?",
+ a:["Regarder si le ventre et la poitrine se soulèvent, et sentir l'air à l'expiration.","Prendre son pouls au poignet pendant 30 secondes.","Observer uniquement la couleur de ses yeux.","Écouter seulement les battements de son cœur."],
+ c:0, exp:"On vérifie la respiration en regardant si le ventre et la poitrine se soulèvent, et en sentant l'air à l'expiration."},
+{id:'s3',cat:'secours',dif:1,
+ q:"Hors autoroute ou endroit dangereux, en cas de panne ou d'accident, où doit être placé le triangle de présignalisation ?",
+ a:["À une distance d'environ 30 mètres de la panne ou de l'accident, ou avant un virage ou un sommet de côte.","Juste à côté du véhicule accidenté.","À 100 mètres minimum, toujours en ligne droite.","Sur le toit du véhicule accidenté."],
+ c:0, exp:"Le triangle doit être placé à environ 30 mètres de la panne ou de l'accident, ou avant un virage ou un sommet de côte."},
+{id:'s4',cat:'secours',dif:1,
+ q:"Quel est l'objectif du Signal d'Alerte et d'Information des Populations (SAIP) ?",
+ a:["Avertir la population d'un danger imminent ou qu'un événement grave est en train de se produire.","Signaler uniquement les accidents de la route.","Informer des conditions météorologiques du jour.","Déclencher automatiquement l'intervention des secours."],
+ c:0, exp:"Le SAIP a pour but d'avertir la population d'un danger imminent ou d'un événement grave en cours."},
+{id:'s5',cat:'secours',dif:2,
+ q:"Sur autoroute, comment indiquer avec précision les lieux de l'accident depuis un téléphone portable ?",
+ a:["En précisant le numéro de l'autoroute, le sens de circulation et le point kilométrique.","En donnant uniquement le nom de la ville la plus proche.","En précisant l'heure exacte de l'accident.","En donnant le numéro d'immatriculation des véhicules impliqués."],
+ c:0, exp:"Il faut préciser le numéro de l'autoroute, le sens de circulation et le point kilométrique."},
+{id:'s6',cat:'secours',dif:1,
+ q:"Pourquoi ne faut-il pas laisser une personne en perte de connaissance allongée sur le dos ?",
+ a:["Car elle risque un étouffement, par des liquides présents dans la gorge ou la chute de la langue en arrière.","Car cela aggrave les hémorragies externes.","Car cela empêche les secours de la localiser.","Il n'y a aucun risque particulier dans cette position."],
+ c:0, exp:"Allongée sur le dos, la victime risque un étouffement par des liquides dans la gorge ou par la chute de la langue en arrière."},
+{id:'s7',cat:'secours',dif:2,
+ q:"Quelles sont les conditions pour réaliser le dégagement d'urgence d'une victime en présence d'un danger réel, immédiat et non contrôlable ?",
+ a:["La victime doit être visible, facile à atteindre, et rien ne doit gêner son dégagement.","Il faut d'abord attendre l'accord des services de secours par téléphone.","Il faut être obligatoirement deux sauveteurs.","Le dégagement doit toujours être réalisé, quelle que soit la situation."],
+ c:0, exp:"La victime doit être visible, facile à atteindre, et rien ne doit gêner son dégagement ; il faut être sûr de pouvoir le réaliser."},
+{id:'s8',cat:'secours',dif:1,
+ q:"Quels sont les signes d'un arrêt cardiaque ?",
+ a:["La victime ne répond pas, ne réagit pas, et ne respire pas ou présente une respiration anormale.","La victime tousse fortement et transpire beaucoup.","La victime a le teint pâle mais respire normalement.","La victime se plaint uniquement de douleurs au bras."],
+ c:0, exp:"Les signes d'un arrêt cardiaque : la victime ne répond pas, ne réagit pas, et ne respire pas ou respire anormalement."},
+{id:'s9',cat:'secours',dif:1,
+ q:"Quels sont les risques pour une personne en perte de connaissance qui reste allongée sur le dos ?",
+ a:["L'arrêt respiratoire et l'arrêt cardiaque.","Une simple gêne passagère pour respirer.","Un risque de brûlure.","Aucun risque si elle est simplement surveillée."],
+ c:0, exp:"Les risques principaux sont l'arrêt respiratoire et l'arrêt cardiaque."},
+{id:'s10',cat:'secours',dif:1,
+ q:"Quels sont les numéros d'urgence à composer ?",
+ a:["Le 18 (pompiers), le 15 (SAMU) et le 112 (urgence, valable dans l'Union Européenne).","Le 17, le 115 et le 119 uniquement.","Le 18 uniquement, valable pour toutes les urgences.","Le 112 uniquement, les autres numéros ayant été supprimés."],
+ c:0, exp:"Le 18 (sapeurs-pompiers), le 15 (SAMU) et le 112 (numéro d'urgence européen) sont les numéros à composer."},
+{id:'s11',cat:'secours',dif:2,
+ q:"Si un dégagement d'urgence de la victime est nécessaire, où doit-elle être déplacée ?",
+ a:["Dans un endroit suffisamment éloigné du danger et de ses conséquences.","À l'intérieur du véhicule accidenté, pour la protéger du froid.","Le plus près possible de la circulation, pour être vue rapidement.","Peu importe l'endroit, l'essentiel est de la déplacer rapidement."],
+ c:0, exp:"La victime doit être déplacée dans un endroit suffisamment éloigné du danger et de ses conséquences."},
+{id:'s12',cat:'secours',dif:1,
+ q:"Pourquoi l'alerte auprès des services de secours doit-elle être rapide et précise ?",
+ a:["Pour permettre aux services de secours d'apporter les moyens adaptés aux victimes dans le délai le plus court.","Parce que les secours ne se déplacent que sur confirmation écrite.","Pour éviter une amende liée au retard d'appel.","Ce n'est pas nécessaire, seule la rapidité de déplacement compte."],
+ c:0, exp:"Une alerte rapide et précise permet aux secours d'apporter les moyens adaptés dans le délai le plus court."},
+{id:'s13',cat:'secours',dif:2,
+ q:"Quel comportement doit-on adopter en présence d'une victime en arrêt cardiaque ?",
+ a:["ALERTER les secours, MASSER (réanimation cardio-pulmonaire), puis DÉFIBRILLER avec un DAE si possible.","Attendre l'arrivée des secours sans intervenir.","Donner immédiatement à boire à la victime.","Allonger la victime sur le ventre et attendre."],
+ c:0, exp:"Le comportement à adopter : ALERTER, MASSER (réanimation cardio-pulmonaire), DÉFIBRILLER si un DAE est disponible."},
+{id:'s14',cat:'secours',dif:1,
+ q:"Qu'est-ce qu'une hémorragie ?",
+ a:["Une perte de sang prolongée qui ne s'arrête pas et imbibe un mouchoir en quelques secondes.","Une simple coupure superficielle sans conséquence.","Une perte de connaissance accompagnée de vertiges.","Un arrêt total de la circulation sanguine dans tout le corps."],
+ c:0, exp:"C'est une perte de sang prolongée qui ne s'arrête pas ; elle imbibe un mouchoir en quelques secondes."},
+{id:'s15',cat:'secours',dif:1,
+ q:"Quel est le risque principal d'un arrêt cardiaque sans intervention des secours ?",
+ a:["La mort de la victime, qui survient en quelques minutes.","Une simple perte de connaissance temporaire.","Des courbatures musculaires passagères.","Aucun risque si la victime respire encore un peu."],
+ c:0, exp:"Sans intervention, un arrêt cardiaque entraîne la mort de la victime en quelques minutes."},
+{id:'s16',cat:'secours',dif:2,
+ q:"Comment est composé le signal d'alerte du SAIP diffusé par les sirènes ?",
+ a:["D'un Signal National d'Alerte variant sur trois cycles successifs, suivi d'un signal de fin d'alerte continu.","D'un seul son bref, répété une seule fois.","De trois sons brefs identiques, sans signal de fin.","D'une voix enregistrée uniquement, sans sirène."],
+ c:0, exp:"Le signal se compose du Signal National d'Alerte (variation sur trois cycles) et d'un signal de fin d'alerte continu."},
+{id:'s17',cat:'secours',dif:2,
+ q:"Dans quelle situation peut-on déplacer une victime ?",
+ a:["En présence d'un danger réel, immédiat et non contrôlable ; ce déplacement doit rester exceptionnel.","Systématiquement, pour la mettre plus à l'aise.","Uniquement si elle le demande elle-même.","Jamais, sous aucun prétexte, même en cas de danger."],
+ c:0, exp:"On ne déplace une victime qu'en présence d'un danger réel, immédiat et non contrôlable ; cela doit rester exceptionnel."},
+{id:'s18',cat:'secours',dif:1,
+ q:"Par quels moyens doit être réalisée l'alerte des secours ?",
+ a:["À l'aide d'un téléphone portable, ou à défaut d'un téléphone fixe ou d'une borne d'appel d'urgence.","Uniquement en hélant les passants aux alentours.","Uniquement via les réseaux sociaux.","Il n'est pas nécessaire d'alerter si la victime semble consciente."],
+ c:0, exp:"L'alerte doit être donnée par téléphone portable, ou à défaut par téléphone fixe ou borne d'appel d'urgence."},
+{id:'s19',cat:'secours',dif:1,
+ q:"Qu'est-ce qu'un défibrillateur automatisé externe (DAE) ?",
+ a:["Un appareil qui peut permettre de rétablir une activité cardiaque normale chez une victime en arrêt cardiaque.","Un appareil qui mesure uniquement la tension artérielle.","Un appareil réservé exclusivement au personnel médical hospitalier.","Un appareil qui recherche automatiquement les fractures."],
+ c:0, exp:"Le DAE peut permettre de rétablir une activité cardiaque normale chez une victime en arrêt cardiaque."},
+{id:'s20',cat:'secours',dif:2,
+ q:"L'utilisation d'un DAE sur une victime qui n'est pas en arrêt cardiaque présente-t-elle un risque ?",
+ a:["Non, car le défibrillateur est automatisé et se déclenche uniquement lorsque la victime est en arrêt cardiaque.","Oui, il peut provoquer un arrêt cardiaque chez une personne consciente.","Oui, il faut impérativement l'accord d'un médecin avant toute utilisation.","Non, mais il ne doit être utilisé que sur des adultes de plus de 50 ans."],
+ c:0, exp:"Le DAE est automatisé et ne se déclenche que lorsque la victime est réellement en arrêt cardiaque : aucun risque en dehors de ce cas."},
+{id:'s21',cat:'secours',dif:1,
+ q:"Quels sont les risques pour une personne victime d'une hémorragie ?",
+ a:["Une détresse circulatoire et un arrêt cardiaque.","Uniquement une cicatrice.","Une perte d'appétit passagère.","Aucun risque si la victime reste consciente."],
+ c:0, exp:"Une hémorragie non maîtrisée expose la victime à une détresse circulatoire, puis à un arrêt cardiaque."},
+{id:'s22',cat:'secours',dif:1,
+ q:"Comment arrêter une hémorragie ?",
+ a:["En appuyant fortement sur l'endroit qui saigne avec les doigts ou la paume, en mettant un tissu propre sur la plaie.","En surélevant uniquement la tête de la victime.","En donnant à boire abondamment à la victime.","En attendant simplement l'arrivée des secours sans intervenir."],
+ c:0, exp:"Il faut appuyer fortement sur la plaie avec les doigts ou la paume de la main, avec un tissu propre posé dessus."},
+];
+
+const Q_ROUTE = QUESTIONS.filter(q=>q.cat==='route');
+const Q_SECOURS = QUESTIONS.filter(q=>q.cat==='secours');
+
+const FLAVOR_ROUTE = [
+  "Un véhicule est immobilisé sur le bas-côté, feux éteints. Pour avancer sans risque, vous devez répondre correctement :",
+  "Le tableau de bord d'une voiture abandonnée clignote encore faiblement. Une question s'affiche sur l'écran :",
+  "Une ancienne borne de contrôle routier grésille et vous pose une question :",
+  "Sur le pare-brise fissuré d'une épave, un message tracé à la main vous met au défi :",
+  "Une alarme retentit au loin. Pour continuer, vous devez démontrer vos connaissances :",
+  "Un panneau lumineux à moitié détruit affiche encore une question :"
+];
+const FLAVOR_SECOURS = [
+  "Une silhouette est allongée près de la chaussée, immobile. Avant d'agir, répondez correctement :",
+  "Une trousse de secours entrouverte gît sur le sol. Une voix radio vous interroge :",
+  "Le silence est pesant. Quelque chose — ou quelqu'un — a besoin d'aide. Répondez sans erreur :",
+  "Un vieux poste radio grésille une question de premiers secours avant de vous laisser passer :",
+  "Une civière vide traîne dans le couloir. Un écran s'allume et vous questionne :",
+  "Des cris étouffés résonnent au loin. Pour intervenir, prouvez que vous savez agir :"
+];
+
+/* --------------------------- NIVEAUX (HISTOIRE) --------------------------- */
+const STORY_LEVELS = [
+ {id:1,key:'l1',title:"LE SIGNAL",
+  intro:[
+   {t:"Une ville entière plongée dans le noir. Aucune lumière ne répond à la vôtre.", img:'ville-abandonnee'},
+   {t:"Vous marchez seul, trempé, sans savoir depuis combien de temps.", img:'personnage'},
+   {t:"Un panneau rouillé indique : « CENTRE DE SECOURS — 7 KM ».", img:'panneau'},
+   {t:"Une voiture est garée en travers de la route, portière entrouverte.", img:'voiture'},
+   {t:"À l'intérieur, l'autoradio grésille encore faiblement.", img:'radio'},
+   {t:"« Si quelqu'un m'entend... rendez-vous au centre de secours. »", radio:true, beat:true, img:'il-entend-la-radio'},
+   {t:"La transmission se coupe. Le brouillard se referme autour de vous.", img:'brouillard'},
+   {t:"Au loin, une forme bouge entre les lampadaires... puis disparaît.", beat:true, img:'silhouette'},
+   {t:"Sur le siège passager, une carte griffonnée indique un itinéraire, un point entouré de rouge.", img:'carte'},
+   {t:"Vous rangez la carte et reprenez la route, seul.", img:'depart'},
+   {t:"Une silhouette vous observe, immobile, au loin. Un éclair déchire le ciel.", beat:true, img:'cliffhanger'},
+   {t:"Vous n'avez pas le choix : avancer."}
+  ],
+  outro:[
+   {t:"Au pied d'un vieux poteau électrique, quelque chose brille dans les herbes hautes.", img:'l1o-poteau'},
+   {t:"Une clé. Rouillée, mais encore utilisable.", img:'l1o-cle'},
+   {t:"Vous la ramassez...", img:'l1o-ramasse'},
+   {t:"... et poursuivez votre chemin vers la route principale.", img:'l1o-chemin'},
+   {t:"Une silhouette vous observe, immobile, au loin. Un éclair déchire le ciel.", beat:true, img:'l1o-silhouette'},
+   {t:"Vous n'avez pas le choix : avancer.", img:'l1o-avancer'}
+  ], mix:{route:4,secours:2}},
+ {id:2,key:'l2',title:"LA ROUTE MORTE",
+  intro:[
+   {t:"La route s'étend à perte de vue, jonchée de véhicules abandonnés, portières ouvertes.", img:'l2-route'},
+   {t:"Des dizaines de voitures forment un mur de tôle immobile, comme figées en pleine fuite.", img:'l2-vehicules'},
+   {t:"Un frisson vous parcourt. Vous avancez, prudent, entre les carcasses.", img:'l2-avance'},
+   {t:"Sur une banquette arrière, un ours en peluche trempé... Ils sont partis vite. Trop vite.", img:'l2-indice'},
+   {t:"La radio grésille de nouveau."},
+   {t:"« Ils ne sont pas partis... ils ont été évacués. »", radio:true, beat:true},
+   {t:"Derrière un fourgon renversé, un carnet de bord traîne, page ouverte sous la pluie.", img:'l2-carnet'},
+   {t:"À l'intérieur, une carte griffonnée indique un itinéraire, un point entouré d'une croix rouge.", img:'l2-carte'},
+   {t:"Vous étudiez le tracé avec attention, cherchant un repère dans ce chaos.", img:'l2-comprehension'},
+   {t:"Un panneau rouillé confirme : « ZONE DE SECOURS — 5 KM ».", img:'l2-panneau'},
+   {t:"Au loin, une lumière vacille faiblement entre les carcasses.", beat:true, img:'l2-lumiere'},
+   {t:"Vous glissez le carnet dans votre sac et reprenez la route, plus déterminé.", img:'l2-reprise'}
+  ],
+  outro:[
+   {t:"La route se resserre. La zone de secours ne doit plus être très loin.", img:'l2o-route'},
+   {t:"Près d'une carcasse renversée, un trousseau accroche un dernier reflet de lumière.", img:'l2o-cle'},
+   {t:"Une clé, marquée « CENTRE ALBAIN — FORMATION & SECOURS ».", img:'l2o-marque'},
+   {t:"Vous la ramassez et poursuivez, la lumière au loin comme seul repère.", img:'l2o-ramasse'}
+  ], mix:{route:3,secours:3}},
+ {id:3,key:'l3',title:"LA ZONE DE SECOURS",
+  intro:[
+   {t:"Une ancienne zone de secours se dresse devant vous, rubans de balisage déchirés au vent.", img:'l3i-zone'},
+   {t:"Des lumières clignotent encore faiblement à l'intérieur.", img:'l3i-lumieres'},
+   {t:"« Ce n'est plus très loin... mais dépêchez-vous. »", radio:true, img:'l3i-radio'}
+  ],
+  outro:[
+   {t:"Sur un bureau renversé, un badge d'accès porte un nom familier.", img:'l3o-badge'},
+   {t:"« CENTRE ALBAIN — FORMATION & SECOURS »", img:'l3o-nom'},
+   {t:"Vous glissez le badge dans votre poche.", img:'l3o-poche'}
+  ], mix:{route:2,secours:4}},
+ {id:4,key:'l4',title:"LE CENTRE ABANDONNÉ",
+  intro:[
+   {t:"Le badge s'active devant une porte blindée. Un déclic.", beat:true, img:'l4i-badge'},
+   {t:"Elle s'ouvre lentement.", img:'l4i-porte'},
+   {t:"À l'intérieur : couloirs vides, salles d'examen désertées, écrans éteints depuis longtemps.", img:'l4i-couloirs'},
+   {t:"« Vous y êtes presque. Ne faites plus aucune erreur. »", radio:true, img:'l4i-radio'}
+  ],
+  outro:[
+   {t:"Au fond d'un couloir, une porte porte l'inscription : « SALLE D'ÉPREUVE FINALE ».", img:'l4o-porte'},
+   {t:"La radio se tait. Un silence pesant s'installe.", img:'l4o-silence'}
+  ], mix:{route:3,secours:3}},
+ {id:5,key:'l5',title:"L'ÉPREUVE FINALE",
+  intro:[
+   {t:"Vous poussez la porte. La salle s'illumine soudain.", beat:true, img:'l5i-porte'},
+   {t:"Sur l'écran principal : « DERNIÈRE ÉVALUATION AVANT ÉVACUATION ».", img:'l5i-ecran'},
+   {t:"Vous comprenez : cette ville n'a pas été abandonnée par accident. Elle a été évacuée, faute de savoir répondre à temps.", img:'l5i-carte'},
+   {t:"À vous de prouver que, vous, vous savez.", img:'l5i-preuve'},
+   {t:"Les épreuves commencent. Votre choix déterminera votre avenir.", img:'l5i-test'},
+   {t:"Restez concentré. Il n'y aura pas de seconde chance.", img:'l5i-concentre'}
+  ],
+  outro:[], mix:{route:3,secours:3}}
+];
+const STORY_VICTORY = [
+  {t:"Le dernier écran affiche : « ÉVALUATION RÉUSSIE ».", img:'ev-ecran'},
+  {t:"Les portes du centre s'ouvrent sur l'extérieur. Le brouillard se dissipe lentement.", img:'ev-portes'},
+  {t:"Une voix, enfin claire, résonne une dernière fois :", img:'ev-radio'},
+  {t:"« Bienvenue parmi les secours. La route recommence, mais vous n'êtes plus seul. »", radio:true, img:'ev-bienvenue'},
+  {t:"Vous sortez du centre. La lumière revient peu à peu.", img:'ev-sortie'},
+  {t:"La ville n'est plus qu'un souvenir derrière vous. Un nouveau chemin s'ouvre.", img:'ev-ville'},
+  {t:"Vous n'êtes plus un simple candidat. Vous faites désormais partie des secours.", img:'ev-secours'},
+  {t:"La route recommence...", img:'ev-route'},
+  {t:"— FIN — ALBAIN HORROR —", img:'ev-fin'}
+];
+
+const HALLOWEEN_LEVELS = [
+ {id:1,key:'h1',title:"LA PORTE",
+  intro:[
+   {t:"31 OCTOBRE — Minuit passé. La nuit d'Halloween s'abat sur Albain.", img:'h1i-minuit'},
+   {t:"Le compte à rebours est terminé. Votre épreuve commence maintenant.", img:'h1i-rebours'},
+   {t:"Votre radio s'active. Une voix vous guide dans l'obscurité.", radio:true, img:'h1i-radio'},
+   {t:"Vous faites face à une grande porte en fer. Elle semble être l'unique accès au centre.", img:'h1i-porte'},
+   {t:"Un clavier numérique protégé par un code. Le code est quelque part dans les environs.", img:'h1i-clavier'},
+   {t:"Explorez la zone. Observez, écoutez, et trouvez le code.", img:'h1i-explorez'}
+  ],
+  outro:[
+   {t:"Code correct. La porte se déverrouille avec un lourd grincement.", img:'h1o-code'},
+   {t:"La porte s'ouvre... Mais ce n'est que le début.", img:'h1o-ouverture'},
+   {t:"Vous avez franchi la première épreuve. La nuit est encore longue...", img:'h1o-termine'}
+  ], mix:{route:3,secours:2}},
+ {id:2,key:'h2',title:"LE COULOIR",
+  intro:[
+   {t:"Vous entrez dans l'aile ouest. Le couloir B vous attend.", img:'h2i-aile'},
+   {t:"Le couloir est silencieux. Chaque porte peut cacher un secret.", beat:true, img:'h2i-silencieux'},
+   {t:"Votre radio capte des interférences. Restez attentif, quelque chose rôde.", radio:true, img:'h2i-radio'},
+   {t:"Un message inquiétant. Quelqu'un vous a devancé.", img:'h2i-message'},
+   {t:"Vous trouvez une clé rouillée. Elle doit ouvrir une porte importante.", img:'h2i-cle'},
+   {t:"Une porte se distingue : B-13. Votre instinct vous dit d'avancer.", img:'h2i-porte'}
+  ],
+  outro:[
+   {t:"La clé fonctionne. La porte B-13 s'ouvre dans un grincement.", img:'h2o-porte'},
+   {t:"Vous découvrez la salle B-13. Mais vous n'êtes pas seul...", beat:true, img:'h2o-salle'},
+   {t:"Le couloir n'était que le début. La nuit révèle ses véritables cauchemars.", img:'h2o-termine'}
+  ], mix:{route:2,secours:3}},
+ {id:3,key:'h3',title:"LA SALLE D'EXAMEN",
+  intro:[
+   {t:"Vous ouvrez la porte B-13. Vous entrez dans la salle d'examen.", img:'h3i-porte'},
+   {t:"La salle est figée dans le temps. Tout semble avoir été abandonné en urgence.", beat:true, img:'h3i-salle'},
+   {t:"Votre radio crépite. Une présence rôde dans les ombres...", radio:true, img:'h3i-radio'},
+   {t:"Un message macabre vous guide. Quelqu'un a laissé des instructions.", img:'h3i-message'},
+   {t:"Vous trouvez les dossiers du patient B-13. Ils contiennent des informations troublantes.", img:'h3i-dossiers'},
+   {t:"Une porte verrouillée. Un code est nécessaire pour continuer.", img:'h3i-verrouille'}
+  ],
+  outro:[
+   {t:"Code correct. Le mécanisme s'active dans un grincement sinistre.", img:'h3o-code'},
+   {t:"La porte s'ouvre lentement. Un nouveau chemin s'offre à vous.", img:'h3o-couloir'},
+   {t:"Vous avez récupéré les dossiers. Mais la vérité ne fait que commencer...", img:'h3o-termine'}
+  ], mix:{route:3,secours:3}},
+ {id:4,key:'h4',title:"LES ARCHIVES",
+  intro:[
+   {t:"Vous atteignez le bâtiment D. Les archives se trouvent à l'intérieur.", img:'h4i-batiment'},
+   {t:"Un long couloir de dossiers oubliés. Chaque case peut cacher un indice.", beat:true, img:'h4i-couloir'},
+   {t:"Votre radio capte des interférences. Quelque chose se cache dans ces archives...", radio:true, img:'h4i-radio'},
+   {t:"Un message glaçant sur le mur. Votre objectif est clair : trouvez la vérité.", img:'h4i-verite'},
+   {t:"Vous trouvez le dossier spécial : ALBAIN. Il contient des enregistrements et des preuves.", img:'h4i-dossier'},
+   {t:"Un casier sécurisé bloque l'accès final. Trouvez le code pour ouvrir le casier D-47.", img:'h4i-casier'}
+  ],
+  outro:[
+   {t:"Code correct. Le casier s'ouvre dans un bruit métallique.", img:'h4o-code'},
+   {t:"Vous récupérez l'enregistrement final. La vérité est presque révélée...", beat:true, img:'h4o-enregistrement'},
+   {t:"Les archives ont livré leurs secrets. Mais le cauchemar n'est pas terminé...", img:'h4o-termine'}
+  ], mix:{route:2,secours:4}},
+ {id:5,key:'h5',title:"LA DERNIÈRE ÉPREUVE",
+  intro:[
+   {t:"Un message final. Vous sentez que tout se joue maintenant.", img:'h5i-message'},
+   {t:"Vous entrez dans une salle inconnue. Une épreuve décisive vous attend.", beat:true, img:'h5i-salle'},
+   {t:"Votre radio grésille. Une voix mystérieuse vous défie.", radio:true, img:'h5i-radio'},
+   {t:"Quatre symboles. Quatre chiffres. Chaque symbole cache une épreuve.", img:'h5i-symboles'},
+   {t:"Des indices sont disséminés dans la salle. Le dossier final pourrait tout expliquer.", img:'h5i-dossier'},
+   {t:"Un code à 4 chiffres. Il ouvrira la porte... ou scellera votre destin.", img:'h5i-code'}
+  ],
+  outro:[
+   {t:"Le temps est écoulé. Vous avez relevé le défi.", img:'h5o-temps'},
+   {t:"La porte s'ouvre lentement. Mais rien ne garantit que vous êtes libre...", beat:true, img:'h5o-sortie'},
+   {t:"Vous avez survécu à la dernière épreuve. Mais certains secrets ne meurent jamais...", img:'h5o-termine'}
+  ], mix:{route:3,secours:3}}
+];
+const HALLOWEEN_VICTORY = [
+  {t:"La nuit d'Halloween touche à sa fin. Le centre Albain est silencieux.", img:'hep-nuit'},
+  {t:"Toutes les épreuves sont terminées. Vous avez survécu.", img:'hep-epreuves'},
+  {t:"Votre radio s'éteint doucement. Le silence reprend ses droits.", radio:true, img:'hep-radio'},
+  {t:"La vérité sur Albain n'était que la partie émergée. Le centre cachait des secrets bien plus sombres.", img:'hep-dossier'},
+  {t:"Vous avez été observé, testé, jugé. Et vous avez prouvé votre valeur.", img:'hep-observe'},
+  {t:"L'aile est désormais déverrouillée. Vous êtes libre de choisir votre chemin.", img:'hep-aile'},
+  {t:"Vous quittez le centre. La nuit d'Halloween se termine.", img:'hep-sortie'},
+  {t:"Mais certaines nuits laissent une marque. Et certains secrets ne s'oublient jamais.", img:'hep-marque'},
+  {t:"HISTOIRE PRINCIPALE TERMINÉE — Merci d'avoir survécu à Albain.", img:'hep-fin'}
+];
+
+/* --------------------------- SAUVEGARDE --------------------------- */
+const SAVE_KEY = 'albainHorrorSaveV1';
+function defaultSave(){
+  return {
+    progress:{unlockedLevel:1, bestScore:0, completed:false},
+    halloween:{unlockedLevel:1, bestScore:0, openingSeen:false, completed:false},
+    score:0,
+    stats:{correct:0, wrong:0, gamesPlayed:0, bestStreak:0},
+    cinematicsSeen:[], // keys
+    settings:{musicVol:60, sfxVol:80, animations:true, reduceEffects:false, textSize:'normal', contrast:'normal'}
+  };
+}
+let SAVE = loadSave();
+function loadSave(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return defaultSave();
+    const parsed = JSON.parse(raw);
+    return Object.assign(defaultSave(), parsed, {
+      progress:Object.assign(defaultSave().progress, parsed.progress||{}),
+      halloween:Object.assign(defaultSave().halloween, parsed.halloween||{}),
+      stats:Object.assign(defaultSave().stats, parsed.stats||{}),
+      settings:Object.assign(defaultSave().settings, parsed.settings||{}),
+    });
+  }catch(e){ return defaultSave(); }
+}
+function persist(){ localStorage.setItem(SAVE_KEY, JSON.stringify(SAVE)); }
+function applySettingsToDOM(){
+  document.body.classList.toggle('reduce-fx', !SAVE.settings.animations || SAVE.settings.reduceEffects);
+  document.body.classList.toggle('text-large', SAVE.settings.textSize==='large');
+  document.body.classList.toggle('contrast-high', SAVE.settings.contrast==='high');
+}
+
+/* --------------------------- DATE / HALLOWEEN --------------------------- */
+function isHalloweenNow(){
+  const d = new Date();
+  const m = d.getMonth()+1, day = d.getDate();
+  return (m===10) || (m===11 && day<=2);
+}
+function applyThemeClass(){
+  document.body.classList.toggle('halloween', isHalloweenNow());
+  renderHalloweenFX();
+}
+function renderHalloweenFX(){
+  const el = document.getElementById('fxHalloweenExtra');
+  if(!isHalloweenNow()){ el.innerHTML=''; return; }
+  let html='';
+  const emojis=['🎃','🦇','🕸️','🍂','🕯️'];
+  for(let i=0;i<10;i++){
+    const e = emojis[i%emojis.length];
+    const left = Math.random()*100;
+    const dur = 6+Math.random()*8;
+    const delay = Math.random()*6;
+    const size = 1.2+Math.random()*1.6;
+    html += `<div style="position:absolute; left:${left}%; top:${-10-Math.random()*20}%; font-size:${size}rem; animation:fall ${dur}s linear ${delay}s infinite;">${e}</div>`;
+  }
+  html += `<div style="position:absolute; top:6%; right:8%; font-size:2.4rem; animation:floaty 5s ease-in-out infinite; opacity:.8;">🌙</div>`;
+  el.innerHTML = html;
+}
+
+/* --------------------------- MUSIQUE DE CINÉMATIQUE (fichier audio) --------------------------- */
+let cineMusicEl = null;
+const CINE_MUSIC_L1_INTRO = "audio/track-01.mp3";
+const CINE_MUSIC_L2_INTRO = "audio/track-02.mp3";
+const CINE_MUSIC_L1_OUTRO = "audio/track-03.mp3";
+const CINE_MUSIC_L2_OUTRO = "audio/track-04.mp3";
+const CINE_MUSIC_L3_INTRO = "audio/track-05.mp3";
+const CINE_MUSIC_L3_OUTRO = "audio/track-06.mp3";
+const CINE_MUSIC_L4_INTRO = "audio/track-07.mp3";
+const CINE_MUSIC_L4_OUTRO = "audio/track-08.mp3";
+const CINE_MUSIC_L5_INTRO = "audio/track-09.mp3";
+const CINE_MUSIC_VICTORY = "audio/track-10.mp3";
+const CINE_MUSIC_H_OPENING = "audio/track-11.mp3";
+const CINE_MUSIC_H1_INTRO = "audio/track-12.mp3";
+const CINE_MUSIC = {
+  'S_l1_intro': CINE_MUSIC_L1_INTRO,
+  'S_l1_outro': CINE_MUSIC_L1_OUTRO,
+  'S_l2_intro': CINE_MUSIC_L2_INTRO,
+  'S_l2_outro': CINE_MUSIC_L2_OUTRO,
+  'S_l3_intro': CINE_MUSIC_L3_INTRO,
+  'S_l3_outro': CINE_MUSIC_L3_OUTRO,
+  'S_l4_intro': CINE_MUSIC_L4_INTRO,
+  'S_l4_outro': CINE_MUSIC_L4_OUTRO,
+  'S_l5_intro': CINE_MUSIC_L5_INTRO,
+  'S_victory': CINE_MUSIC_VICTORY,
+  'H_opening': CINE_MUSIC_H_OPENING,
+  'H_h1_intro': CINE_MUSIC_H1_INTRO,
+  'H_h1_outro': CINE_MUSIC_H1_INTRO,
+  'H_h2_intro': CINE_MUSIC_H1_INTRO,
+  'H_h2_outro': CINE_MUSIC_H1_INTRO,
+  'H_h3_intro': CINE_MUSIC_H1_INTRO,
+  'H_h3_outro': CINE_MUSIC_H1_INTRO,
+  'H_h4_intro': CINE_MUSIC_H1_INTRO,
+  'H_h4_outro': CINE_MUSIC_H1_INTRO,
+  'H_h5_intro': CINE_MUSIC_H1_INTRO,
+  'H_h5_outro': CINE_MUSIC_H1_INTRO,
+  'H_victory': CINE_MUSIC_H1_INTRO
+};
+function playCineMusic(key){
+  const src = CINE_MUSIC[key];
+  if(!src) return;
+  stopCineMusic();
+  cineMusicEl = new Audio(src);
+  cineMusicEl.loop = false;
+  cineMusicEl.volume = (SAVE.settings && typeof SAVE.settings.musicVol==='number' ? SAVE.settings.musicVol : 60)/100;
+  cineMusicEl.play().catch(()=>{ /* lecture auto bloquée par le navigateur, ignoré */ });
+}
+function stopCineMusic(){
+  if(!cineMusicEl) return;
+  const el = cineMusicEl; cineMusicEl = null;
+  let vol = el.volume;
+  const fade = setInterval(()=>{
+    vol -= 0.08;
+    if(vol<=0){ clearInterval(fade); el.pause(); el.currentTime=0; }
+    else { el.volume = vol; }
+  }, 60);
+}
+function setCineMusicVolume(v){
+  if(cineMusicEl) cineMusicEl.volume = v/100;
+}
+
+/* --------------------------- AUDIO (synthétisé, sans fichiers) --------------------------- */
+let actx=null;
+function ensureAudio(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } }
+function beep(freq, dur, type='sine', vol=1){
+  if(!SAVE.settings) return;
+  ensureAudio(); if(!actx) return;
+  const g = actx.createGain();
+  const o = actx.createOscillator();
+  o.type=type; o.frequency.value=freq;
+  const v = (SAVE.settings.sfxVol/100) * vol * 0.18;
+  g.gain.setValueAtTime(v, actx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime+dur);
+  o.connect(g); g.connect(actx.destination);
+  o.start(); o.stop(actx.currentTime+dur);
+}
+const SFX = {
+  click:()=>beep(320,.08,'square',.5),
+  correct:()=>{beep(520,.12,'sine',.7); setTimeout(()=>beep(780,.15,'sine',.6),90);},
+  wrong:()=>{beep(140,.25,'sawtooth',.8);},
+  door:()=>{beep(80,.5,'sine',.8);},
+  transition:()=>{beep(220,.3,'triangle',.5);},
+  ambient:()=>{}
+};
+
+/* --------------------------- UTILS --------------------------- */
+function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+function sample(pool,n){ return shuffle(pool).slice(0,Math.min(n,pool.length)); }
+function pickLevelQuestions(mix){
+  let picked = [];
+  picked = picked.concat(sample(Q_ROUTE, mix.route||0));
+  picked = picked.concat(sample(Q_SECOURS, mix.secours||0));
+  return shuffle(picked).map(q=>{
+    const idxs = shuffle([0,1,2,3]);
+    const answers = idxs.map(i=>q.a[i]);
+    const correct = idxs.indexOf(q.c);
+    const flav = (q.cat==='route'?FLAVOR_ROUTE:FLAVOR_SECOURS);
+    return {...q, answers, correct, flavor: flav[Math.floor(Math.random()*flav.length)]};
+  });
+}
+function markCine(key){ if(!SAVE.cinematicsSeen.includes(key)){ SAVE.cinematicsSeen.push(key); persist(); } }
+
+/* --------------------------- STATE MACHINE --------------------------- */
+let ST = {
+  screen:'menu',
+  mode:'story', // story | halloween | free
+  level:1,
+  levelQuestions:[],
+  qIndex:0,
+  hearts:3,
+  score:0,
+  streak:0,
+  bestStreakRun:0,
+  answered:false,
+  freeConfig:{cat:'mix', count:10},
+  cineQueue:[], cineIdx:0, cineOnDone:null, cineTitle:'',
+};
+const app = document.getElementById('app');
+function go(screen){ ST.screen=screen; render(); window.scrollTo(0,0); }
+
+/* --------------------------- RENDER: MENU --------------------------- */
+function render(){
+  applyThemeClass();
+  applySettingsToDOM();
+  switch(ST.screen){
+    case 'menu': return renderMenu();
+    case 'settings': return renderSettings();
+    case 'collection': return renderCollection();
+    case 'free-setup': return renderFreeSetup();
+    case 'gameplay': return renderGameplay();
+    case 'levelend': return renderLevelEnd();
+    case 'defeat': return renderDefeat();
+    case 'victory': return renderVictory();
+    default: return renderMenu();
+  }
+}
+
+function renderMenu(){
+  const hallo = isHalloweenNow();
+  const title = hallo ? "ALBAIN HORROR — HALLOWEEN" : "ALBAIN HORROR";
+  const sub = hallo ? "« Le centre ouvre ses portes une fois par an... »" : "« La route n'est que le début... »";
+  const continueLabel = hallo
+    ? (SAVE.halloween.unlockedLevel>1 || SAVE.halloween.completed ? "▶ CONTINUER (Halloween)" : null)
+    : (SAVE.progress.unlockedLevel>1 || SAVE.progress.completed ? "▶ CONTINUER" : null);
+
+  app.innerHTML = `
+  <div class="screen">
+    <div class="wrap">
+      <div class="menu-badge">${hallo?'🎃 ÉVÉNEMENT ACTIF':'CENTRE ALBAIN — RÉVISION PERMIS'}</div>
+      <div class="title-main">
+        <h1>${title}</h1>
+        <div class="sub">${sub}</div>
+      </div>
+      <div style="height:18px"></div>
+      <button class="btn primary" onclick="startAdventure()">▶ COMMENCER L'AVENTURE</button>
+      ${continueLabel?`<button class="btn" onclick="continueAdventure()">${continueLabel}</button>`:''}
+      <button class="btn" onclick="go('free-setup')">🎯 MODE LIBRE</button>
+      <button class="btn ghost" onclick="go('collection')">📁 COLLECTION</button>
+      <button class="btn ghost" onclick="go('settings')">⚙ PARAMÈTRES</button>
+      <footer class="credits">Contenu pédagogique fidèle au Livret de Vérifications — École Albain</footer>
+    </div>
+  </div>`;
+}
+
+function startAdventure(){
+  SFX.click();
+  const hallo = isHalloweenNow();
+  if(hallo && !SAVE.halloween.openingSeen){
+    playHalloweenOpening(()=>{ SAVE.halloween.openingSeen=true; persist(); beginStoryFromLevel(1,true); });
+    return;
+  }
+  beginStoryFromLevel(1, hallo);
+}
+function continueAdventure(){
+  SFX.click();
+  const hallo = isHalloweenNow();
+  const lvl = hallo ? SAVE.halloween.unlockedLevel : SAVE.progress.unlockedLevel;
+  beginStoryFromLevel(Math.min(lvl,5), hallo);
+}
+function beginStoryFromLevel(levelNum, hallo){
+  ST.mode = hallo ? 'halloween' : 'story';
+  ST.level = levelNum;
+  playLevelIntro(levelNum);
+}
+
+/* --------------------------- CINEMATIQUES : MOTEUR DE MISE EN SCÈNE --------------------------- */
+function levelsForMode(){ return ST.mode==='halloween' ? HALLOWEEN_LEVELS : STORY_LEVELS; }
+function levelConf(n){ return levelsForMode()[n-1]; }
+
+/* ---- Décors : chaque scène = silhouettes SVG (loin/près) + type de particules ---- */
+function svgWrap(inner){ return `<svg viewBox="0 0 800 450" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`; }
+function carWreck(cx,cy,rot){ return `<g transform="translate(${cx},${cy}) rotate(${rot})"><rect x="-70" y="-20" width="140" height="45" rx="8" fill="var(--panel2)" stroke="var(--danger2)" stroke-opacity=".5" stroke-width="2"/><circle cx="-40" cy="26" r="14" fill="#000" fill-opacity=".6"/><circle cx="40" cy="26" r="14" fill="#000" fill-opacity=".6"/></g>`; }
+function windowGrid(){ let s=''; for(let r=0;r<4;r++)for(let c=0;c<8;c++){ const lit=((r*8+c)%7===0); s+=`<rect x="${90+c*70}" y="${90+r*70}" width="26" height="34" fill="${lit?'var(--gold)':'#000'}" fill-opacity="${lit?0.45:0.55}"/>`; } return s; }
+function rivets(){ let s=''; for(let i=0;i<6;i++){ s+=`<circle cx="280" cy="${110+i*55}" r="4" fill="var(--textdim)" fill-opacity=".6"/><circle cx="520" cy="${110+i*55}" r="4" fill="var(--textdim)" fill-opacity=".6"/>`; } return s; }
+function ceilingLights(){ let s=''; for(let i=0;i<4;i++){ s+=`<rect x="${180+i*130}" y="20" width="60" height="10" fill="var(--gold)" fill-opacity=".5"><animate attributeName="fill-opacity" values=".6;.1;.6" dur="${1+i*0.4}s" repeatCount="indefinite"/></rect>`; } return s; }
+function monitorGrid(){ let s=''; for(let r=0;r<2;r++)for(let c=0;c<6;c++){ s+=`<rect x="${100+c*100}" y="${100+r*110}" width="70" height="46" fill="var(--accent)" fill-opacity=".18" stroke="var(--accent)" stroke-opacity=".4"><animate attributeName="fill-opacity" values=".18;.4;.18" dur="${2+((r+c)%3)}s" repeatCount="indefinite"/></rect>`; } return s; }
+function shelfUnits(){ let s='<rect x="0" y="0" width="800" height="450" fill="#000" fill-opacity=".3"/>'; for(let i=0;i<6;i++){ const x=40+i*130; s+=`<rect x="${x}" y="60" width="16" height="360" fill="var(--panel2)"/><rect x="${x}" y="60" width="90" height="16" fill="var(--panel2)"/><rect x="${x}" y="160" width="90" height="16" fill="var(--panel2)"/><rect x="${x}" y="260" width="90" height="16" fill="var(--panel2)"/>`; } return s; }
+function clockTicks(){ let s=''; for(let i=0;i<12;i++){ const a=i*30*Math.PI/180, x1=400+110*Math.sin(a), y1=220-110*Math.cos(a), x2=400+128*Math.sin(a), y2=220-128*Math.cos(a); s+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="var(--textdim)" stroke-opacity=".5" stroke-width="2"/>`; } return s; }
+
+const SCENE_BUILDERS = {
+ road_fog:()=>({
+   far: svgWrap(`<path d="M0,300 Q150,255 300,285 T600,275 T800,300 L800,450 L0,450 Z" fill="#000" fill-opacity=".5"/><line x1="670" y1="120" x2="670" y2="300" stroke="var(--accent)" stroke-opacity=".5" stroke-width="3"/><circle cx="670" cy="112" r="6" fill="var(--gold)"><animate attributeName="opacity" values="1;.2;1" dur="2.3s" repeatCount="indefinite"/></circle>`),
+   near: svgWrap(`<ellipse cx="180" cy="380" rx="140" ry="30" fill="#fff" fill-opacity=".05"/><ellipse cx="600" cy="400" rx="180" ry="34" fill="#fff" fill-opacity=".05"/>`),
+   particle:'rain'}),
+ wreckage_road:()=>({
+   far: svgWrap(`<path d="M0,300 Q200,270 400,290 T800,295 L800,450 L0,450 Z" fill="#000" fill-opacity=".5"/>`),
+   near: svgWrap(`${carWreck(160,330,0)}${carWreck(560,300,18)}`),
+   particle:'dust'}),
+ rescue_zone:()=>({
+   far: svgWrap(`<rect x="40" y="180" width="90" height="120" fill="#000" fill-opacity=".4"/><rect x="620" y="160" width="110" height="140" fill="#000" fill-opacity=".4"/>`),
+   near: svgWrap(`<polygon points="300,220 400,300 200,300" fill="var(--panel2)" fill-opacity=".85"/><rect x="230" y="300" width="140" height="80" fill="var(--panel2)" fill-opacity=".85"/><circle cx="140" cy="260" r="10" fill="var(--danger2)"><animate attributeName="opacity" values="1;.15;1" dur="1s" repeatCount="indefinite"/></circle><circle cx="170" cy="260" r="10" fill="var(--accent2)"><animate attributeName="opacity" values=".15;1;.15" dur="1s" repeatCount="indefinite"/></circle><polygon points="640,400 660,340 680,400" fill="var(--gold)" fill-opacity=".6"/>`),
+   particle:'dust'}),
+ center_door:()=>({
+   far: svgWrap(`<rect x="60" y="60" width="680" height="390" fill="#000" fill-opacity=".35"/>${windowGrid()}`),
+   near: svgWrap(`<rect x="260" y="90" width="280" height="360" rx="6" fill="var(--panel2)" stroke="var(--accent)" stroke-opacity=".6" stroke-width="3"/><line x1="400" y1="90" x2="400" y2="450" stroke="var(--accent)" stroke-opacity=".4" stroke-width="2"/>${rivets()}<circle cx="380" cy="280" r="8" fill="var(--gold)"/>`),
+   particle:'dust'}),
+ corridor:()=>({
+   far: svgWrap(`<rect x="0" y="0" width="800" height="450" fill="#000" fill-opacity=".2"/><rect x="260" y="70" width="280" height="380" fill="none" stroke="var(--textdim)" stroke-opacity=".25" stroke-width="2"/><rect x="320" y="140" width="160" height="310" fill="none" stroke="var(--textdim)" stroke-opacity=".3" stroke-width="2"/><rect x="360" y="200" width="80" height="250" fill="#000" fill-opacity=".6"/>`),
+   near: svgWrap(ceilingLights()),
+   particle:'dust'}),
+ exam_room:()=>({
+   far: svgWrap(`<rect x="0" y="0" width="800" height="450" fill="#000" fill-opacity=".25"/>${monitorGrid()}`),
+   near: svgWrap(`<rect x="60" y="360" width="680" height="16" fill="var(--panel2)" fill-opacity=".7"/><rect x="90" y="330" width="90" height="30" fill="var(--panel2)" fill-opacity=".6"/><rect x="330" y="330" width="90" height="30" fill="var(--panel2)" fill-opacity=".6"/><rect x="570" y="330" width="90" height="30" fill="var(--panel2)" fill-opacity=".6"/>`),
+   particle:'dust'}),
+ archive:()=>({
+   far: svgWrap(shelfUnits()),
+   near: svgWrap(`<circle cx="400" cy="60" r="10" fill="var(--gold)"><animate attributeName="opacity" values="1;.4;1" dur="1.8s" repeatCount="indefinite"/></circle><polygon points="400,70 340,260 460,260" fill="var(--gold)" fill-opacity=".06"/>`),
+   particle:'dust'}),
+ candle_room:()=>({
+   far: svgWrap(`<rect x="0" y="0" width="800" height="450" fill="#000" fill-opacity=".3"/>`),
+   near: svgWrap(`<circle cx="400" cy="330" r="46" fill="var(--gold)" fill-opacity=".18"><animate attributeName="r" values="40;52;40" dur="2.2s" repeatCount="indefinite"/></circle><rect x="392" y="330" width="16" height="50" fill="#3a2a1a"/><path d="M400,300 C392,315 388,325 400,332 C412,325 408,315 400,300 Z" fill="var(--gold)"><animate attributeName="opacity" values="1;.7;1" dur=".6s" repeatCount="indefinite"/></path>`),
+   particle:'embers'}),
+ clock_lightning:()=>({
+   far: svgWrap(`<circle cx="400" cy="220" r="130" fill="none" stroke="var(--textdim)" stroke-opacity=".4" stroke-width="3"/>${clockTicks()}<line x1="400" y1="220" x2="400" y2="120" stroke="var(--gold)" stroke-width="4"/><line x1="400" y1="220" x2="460" y2="220" stroke="var(--gold)" stroke-width="3"/>`),
+   near: svgWrap(`<polyline points="120,0 170,140 130,150 210,320" fill="none" stroke="var(--gold)" stroke-width="5" stroke-opacity=".9"/>`),
+   particle:'rain'}),
+ key_found:()=>({
+   far: svgWrap(`<rect x="0" y="0" width="800" height="450" fill="#000" fill-opacity=".35"/>`),
+   near: svgWrap(`<g transform="translate(400,240) rotate(20)"><circle cx="0" cy="0" r="34" fill="none" stroke="var(--gold)" stroke-width="10"/><rect x="30" y="-8" width="90" height="16" fill="var(--gold)"/><rect x="95" y="8" width="14" height="18" fill="var(--gold)"/><rect x="115" y="8" width="10" height="14" fill="var(--gold)"/></g>`),
+   particle:'motes'}),
+ badge:()=>({
+   far: svgWrap(`<rect x="0" y="0" width="800" height="450" fill="#000" fill-opacity=".35"/>`),
+   near: svgWrap(`<rect x="320" y="150" width="160" height="200" rx="14" fill="var(--panel2)" stroke="var(--accent)" stroke-width="3"/><circle cx="400" cy="210" r="30" fill="var(--accent)" fill-opacity=".4"/><rect x="345" y="260" width="110" height="10" fill="var(--gold)" fill-opacity=".7"/><rect x="345" y="280" width="80" height="8" fill="var(--textdim)" fill-opacity=".6"/>`),
+   particle:'dust'}),
+ notebook:()=>({
+   far: svgWrap(`<rect x="0" y="0" width="800" height="450" fill="#000" fill-opacity=".35"/>`),
+   near: svgWrap(`<rect x="290" y="140" width="220" height="170" fill="var(--panel2)" stroke="var(--gold)" stroke-width="2"/><line x1="310" y1="175" x2="490" y2="175" stroke="var(--textdim)" stroke-opacity=".5"/><line x1="310" y1="200" x2="490" y2="200" stroke="var(--textdim)" stroke-opacity=".5"/><line x1="310" y1="225" x2="440" y2="225" stroke="var(--textdim)" stroke-opacity=".5"/>`),
+   particle:'dust'}),
+ victory_light:()=>({
+   far: svgWrap(`<rect x="0" y="0" width="800" height="450" fill="#000" fill-opacity=".2"/><circle cx="400" cy="230" r="160" fill="var(--gold)" fill-opacity=".12"/>`),
+   near: svgWrap(`<rect x="240" y="60" width="150" height="390" fill="var(--panel2)" fill-opacity=".9"><animate attributeName="x" values="240;150" dur="3s" fill="freeze"/></rect><rect x="410" y="60" width="150" height="390" fill="var(--panel2)" fill-opacity=".9"><animate attributeName="x" values="410;500" dur="3s" fill="freeze"/></rect>`),
+   particle:'motes'}),
+};
+const CINE_SCENES = {
+  S_l1_intro:'road_fog', S_l1_outro:'key_found',
+  S_l2_intro:'wreckage_road', S_l2_outro:'notebook',
+  S_l3_intro:'rescue_zone', S_l3_outro:'badge',
+  S_l4_intro:'center_door', S_l4_outro:'corridor',
+  S_l5_intro:'exam_room', S_victory:'victory_light',
+  H_opening:'clock_lightning',
+  H_h1_intro:'center_door', H_h1_outro:'corridor',
+  H_h2_intro:'corridor', H_h2_outro:'corridor',
+  H_h3_intro:'exam_room', H_h3_outro:'exam_room',
+  H_h4_intro:'archive', H_h4_outro:'archive',
+  H_h5_intro:'candle_room', H_victory:'victory_light',
+};
+function getScene(key){
+  const type = CINE_SCENES[key] || (ST.mode==='halloween'?'corridor':'road_fog');
+  /* Décors SVG procéduraux désactivés : seule la pluie reste (particle:'rain'). */
+  return { far: svgWrap(''), near: svgWrap(''), particle:'rain', type };
+}
+/* Chemin de secours pour une éventuelle photo externe : images/scene-<nom>.jpg (ou .png).
+   Utilisé uniquement si l'image n'est pas déjà embarquée dans IMAGE_DATA ci-dessous. */
+/* Images embarquées en base64 (fichier unique, aucun dossier externe requis).
+   Clé = nom utilisé dans les champs "img" des répliques / "type" des scènes. */
+const IMAGE_DATA = {
+  'ville-abandonnee': 'images/ville-abandonnee.jpg',
+  'route': 'images/route.jpg',
+  'personnage': 'images/personnage.jpg',
+  'panneau': 'images/panneau.jpg',
+  'voiture': 'images/voiture.jpg',
+  'radio': 'images/radio.jpg',
+  'il-entend-la-radio': 'images/il-entend-la-radio.jpg',
+  'brouillard': 'images/brouillard.jpg',
+  'silhouette': 'images/silhouette.jpg',
+  'carte': 'images/carte.jpg',
+  'depart': 'images/depart.jpg',
+  'cliffhanger': 'images/cliffhanger.jpg',
+  'l2-route': 'images/l2-route.jpg',
+  'l2-vehicules': 'images/l2-vehicules.jpg',
+  'l2-avance': 'images/l2-avance.jpg',
+  'l2-indice': 'images/l2-indice.jpg',
+  'l2-carnet': 'images/l2-carnet.jpg',
+  'l2-carte': 'images/l2-carte.jpg',
+  'l2-comprehension': 'images/l2-comprehension.jpg',
+  'l2-panneau': 'images/l2-panneau.jpg',
+  'l2-lumiere': 'images/l2-lumiere.jpg',
+  'l2-reprise': 'images/l2-reprise.jpg',
+  'l2-approche': 'images/l2-approche.jpg',
+  'l2-cle': 'images/l2-cle.jpg',
+  'l1o-poteau': 'images/l1o-poteau.jpg',
+  'l1o-cle': 'images/l1o-cle.jpg',
+  'l1o-ramasse': 'images/l1o-ramasse.jpg',
+  'l1o-chemin': 'images/l1o-chemin.jpg',
+  'l1o-silhouette': 'images/l1o-silhouette.jpg',
+  'l1o-avancer': 'images/l1o-avancer.jpg',
+  'l2o-route': 'images/l2o-route.jpg',
+  'l2o-cle': 'images/l2o-cle.jpg',
+  'l2o-marque': 'images/l2o-marque.jpg',
+  'l2o-ramasse': 'images/l2o-ramasse.jpg',
+  'l3i-zone': 'images/l3i-zone.jpg',
+  'l3i-lumieres': 'images/l3i-lumieres.jpg',
+  'l3i-radio': 'images/l3i-radio.jpg',
+  'l3o-badge': 'images/l3o-badge.jpg',
+  'l3o-nom': 'images/l3o-nom.jpg',
+  'l3o-poche': 'images/l3o-poche.jpg',
+  'l4i-badge': 'images/l4i-badge.jpg',
+  'l4i-porte': 'images/l4i-porte.jpg',
+  'l4i-couloirs': 'images/l4i-couloirs.jpg',
+  'l4i-radio': 'images/l4i-radio.jpg',
+  'l4o-porte': 'images/l4o-porte.jpg',
+  'l4o-silence': 'images/l4o-silence.jpg',
+  'l5i-porte': 'images/l5i-porte.jpg',
+  'l5i-ecran': 'images/l5i-ecran.jpg',
+  'l5i-carte': 'images/l5i-carte.jpg',
+  'l5i-preuve': 'images/l5i-preuve.jpg',
+  'l5i-test': 'images/l5i-test.jpg',
+  'l5i-concentre': 'images/l5i-concentre.jpg',
+  'ev-ecran': 'images/ev-ecran.jpg',
+  'ev-portes': 'images/ev-portes.jpg',
+  'ev-radio': 'images/ev-radio.jpg',
+  'ev-bienvenue': 'images/ev-bienvenue.jpg',
+  'ev-sortie': 'images/ev-sortie.jpg',
+  'ev-ville': 'images/ev-ville.jpg',
+  'ev-secours': 'images/ev-secours.jpg',
+  'ev-route': 'images/ev-route.jpg',
+  'ev-fin': 'images/ev-fin.jpg',
+  'ho-etablissement': 'images/ho-etablissement.jpg',
+  'ho-date': 'images/ho-date.jpg',
+  'ho-minuit': 'images/ho-minuit.jpg',
+  'ho-eclair': 'images/ho-eclair.jpg',
+  'ho-porte': 'images/ho-porte.jpg',
+  'ho-radio': 'images/ho-radio.jpg',
+  'ho-ouvert': 'images/ho-ouvert.jpg',
+  'h1i-minuit': 'images/h1i-minuit.jpg',
+  'h1i-rebours': 'images/h1i-rebours.jpg',
+  'h1i-radio': 'images/h1i-radio.jpg',
+  'h1i-porte': 'images/h1i-porte.jpg',
+  'h1i-clavier': 'images/h1i-clavier.jpg',
+  'h1i-explorez': 'images/h1i-explorez.jpg',
+  'h1o-code': 'images/h1o-code.jpg',
+  'h1o-ouverture': 'images/h1o-ouverture.jpg',
+  'h1o-termine': 'images/h1o-termine.jpg',
+  'h2i-aile': 'images/h2i-aile.jpg',
+  'h2i-silencieux': 'images/h2i-silencieux.jpg',
+  'h2i-radio': 'images/h2i-radio.jpg',
+  'h2i-message': 'images/h2i-message.jpg',
+  'h2i-cle': 'images/h2i-cle.jpg',
+  'h2i-porte': 'images/h2i-porte.jpg',
+  'h2o-porte': 'images/h2o-porte.jpg',
+  'h2o-salle': 'images/h2o-salle.jpg',
+  'h2o-termine': 'images/h2o-termine.jpg',
+  'h3i-porte': 'images/h3i-porte.jpg',
+  'h3i-salle': 'images/h3i-salle.jpg',
+  'h3i-radio': 'images/h3i-radio.jpg',
+  'h3i-message': 'images/h3i-message.jpg',
+  'h3i-dossiers': 'images/h3i-dossiers.jpg',
+  'h3i-verrouille': 'images/h3i-verrouille.jpg',
+  'h3o-code': 'images/h3o-code.jpg',
+  'h3o-couloir': 'images/h3o-couloir.jpg',
+  'h3o-termine': 'images/h3o-termine.jpg',
+  'h4i-batiment': 'images/h4i-batiment.jpg',
+  'h4i-couloir': 'images/h4i-couloir.jpg',
+  'h4i-radio': 'images/h4i-radio.jpg',
+  'h4i-verite': 'images/h4i-verite.jpg',
+  'h4i-dossier': 'images/h4i-dossier.jpg',
+  'h4i-casier': 'images/h4i-casier.jpg',
+  'h4o-code': 'images/h4o-code.jpg',
+  'h4o-enregistrement': 'images/h4o-enregistrement.jpg',
+  'h4o-termine': 'images/h4o-termine.jpg',
+  'h5i-message': 'images/h5i-message.jpg',
+  'h5i-salle': 'images/h5i-salle.jpg',
+  'h5i-radio': 'images/h5i-radio.jpg',
+  'h5i-symboles': 'images/h5i-symboles.jpg',
+  'h5i-dossier': 'images/h5i-dossier.jpg',
+  'h5i-code': 'images/h5i-code.jpg',
+  'h5o-temps': 'images/h5o-temps.jpg',
+  'h5o-sortie': 'images/h5o-sortie.jpg',
+  'h5o-termine': 'images/h5o-termine.jpg',
+  'hep-nuit': 'images/hep-nuit.jpg',
+  'hep-epreuves': 'images/hep-epreuves.jpg',
+  'hep-radio': 'images/hep-radio.jpg',
+  'hep-dossier': 'images/hep-dossier.jpg',
+  'hep-observe': 'images/hep-observe.jpg',
+  'hep-aile': 'images/hep-aile.jpg',
+  'hep-sortie': 'images/hep-sortie.jpg',
+  'hep-marque': 'images/hep-marque.jpg',
+  'hep-fin': 'images/hep-fin.jpg',
+};
+
+function scenePhotoPath(name){ return 'images/scene-'+name.replace(/_/g,'-')+'.jpg'; }
+/* Charge une photo (embarquée en priorité, sinon fichier externe, sinon illustration générée)
+   et l'affiche en fondu sur le calque photo courant. */
+function setCinePhoto(name){
+  if(!ST._cineEl) return;
+  const layers = ST._cineEl.querySelectorAll('.cine-photo');
+  if(layers.length<2 || ST._currentPhotoName===name) return;
+  ST._currentPhotoName = name;
+  const activeIdx = ST._cineActiveLayer||0;
+  const nextIdx = activeIdx===0?1:0;
+  const activeEl = layers[activeIdx], nextEl = layers[nextIdx];
+  const crossfadeTo = (src)=>{
+    nextEl.classList.remove('kb');
+    nextEl.style.transition='none';
+    nextEl.style.opacity='0';
+    nextEl.style.zIndex='4';
+    activeEl.style.zIndex='3';
+    nextEl.src = src;
+    const reveal = ()=>{
+      void nextEl.offsetWidth; // force reflow avant de réactiver la transition
+      nextEl.style.transition='opacity .6s ease';
+      activeEl.style.transition='opacity .6s ease';
+      nextEl.style.opacity='1';
+      activeEl.style.opacity='0';
+      requestAnimationFrame(()=>nextEl.classList.add('kb'));
+      ST._cineActiveLayer = nextIdx;
+    };
+    // decode() garantit que l'image est prête à l'affichage avant le fondu (évite le clignotement/flash noir)
+    if(nextEl.decode){ nextEl.decode().then(reveal).catch(reveal); } else { reveal(); }
+  };
+  // 1) image embarquée en base64 (fichier unique, toujours disponible)
+  if(typeof IMAGE_DATA!=='undefined' && IMAGE_DATA[name]){ crossfadeTo(IMAGE_DATA[name]); return; }
+  // 2) sinon, tente un fichier externe images/scene-<nom>.jpg puis .png
+  const jpgSrc = scenePhotoPath(name);
+  const tryLoad = (src, onFail)=>{
+    const probe = new Image();
+    probe.onload = ()=>crossfadeTo(src);
+    probe.onerror = onFail;
+    probe.src = src;
+  };
+  tryLoad(jpgSrc, ()=>{
+    const pngSrc = jpgSrc.replace(/\.jpg$/i,'.png');
+    // 3) sinon, on masque la photo : l'illustration générée en dessous reste visible
+    tryLoad(pngSrc, ()=>{
+      nextEl.style.transition='none'; nextEl.style.opacity='0'; nextEl.removeAttribute('src');
+      activeEl.style.transition='opacity .4s ease'; activeEl.style.opacity='0';
+      ST._cineActiveLayer = nextIdx;
+    });
+  });
+}
+
+/* ---- Particules Canvas (pluie / poussière / braises / éclats) ---- */
+const PARTICLE_CONFIGS = {
+  rain:{count:60,color:'rgba(200,210,255,.55)',speedMin:11,speedMax:19,len:20,dir:'down'},
+  embers:{count:30,color:'255,150,40',speedMin:.4,speedMax:1.1,size:2.4,dir:'up',glow:true},
+  dust:{count:34,color:'220,210,255',speedMin:.15,speedMax:.4,size:1.8,dir:'up'},
+  motes:{count:22,color:'255,230,160',speedMin:.2,speedMax:.5,size:2.4,dir:'up',glow:true},
+};
+function initParticles(container, type){
+  if(document.body.classList.contains('reduce-fx')) return null;
+  const cfg = PARTICLE_CONFIGS[type]||PARTICLE_CONFIGS.dust;
+  const canvas = document.createElement('canvas');
+  canvas.className='cine-particles-canvas';
+  container.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  function resize(){ canvas.width = container.clientWidth; canvas.height = container.clientHeight; }
+  resize();
+  const small = window.innerWidth < 480;
+  const count = small ? Math.round(cfg.count*.55) : cfg.count;
+  function spawn(){
+    const w=canvas.width, h=canvas.height;
+    if(cfg.dir==='down') return {x:Math.random()*w, y:Math.random()*-h, vy:cfg.speedMin+Math.random()*(cfg.speedMax-cfg.speedMin), sway:0};
+    return {x:Math.random()*w, y:h+Math.random()*h, vy:cfg.speedMin+Math.random()*(cfg.speedMax-cfg.speedMin), sway:Math.random()*Math.PI*2, r:(cfg.size*.6)+Math.random()*cfg.size};
+  }
+  let particles = Array.from({length:count}, spawn);
+  let raf, running=true;
+  function tick(){
+    if(!running) return;
+    const w=canvas.width, h=canvas.height;
+    ctx.clearRect(0,0,w,h);
+    particles.forEach(p=>{
+      if(cfg.dir==='down'){
+        p.y += p.vy;
+        if(p.y>h+20){ p.y=-20; p.x=Math.random()*w; }
+        ctx.strokeStyle = cfg.color; ctx.lineWidth=1.4;
+        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x+3,p.y+cfg.len); ctx.stroke();
+      } else {
+        p.y -= p.vy; p.sway += .02;
+        p.x += Math.sin(p.sway)*.4;
+        if(p.y<-20){ p.y=h+20; p.x=Math.random()*w; }
+        ctx.beginPath();
+        if(cfg.glow){
+          const grad = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*3);
+          grad.addColorStop(0,'rgba('+cfg.color+',.9)'); grad.addColorStop(1,'rgba('+cfg.color+',0)');
+          ctx.fillStyle = grad; ctx.arc(p.x,p.y,p.r*3,0,7); ctx.fill();
+        } else {
+          ctx.fillStyle='rgba('+cfg.color+',.5)'; ctx.arc(p.x,p.y,p.r,0,7); ctx.fill();
+        }
+      }
+    });
+    raf = requestAnimationFrame(tick);
+  }
+  tick();
+  return { stop(){ running=false; cancelAnimationFrame(raf); canvas.remove(); } };
+}
+
+function playCinematic(lines, title, onDone, keyForCollection){
+  ST.cineQueue = lines; ST.cineIdx=0; ST.cineOnDone = onDone; ST.cineTitle=title; ST.cineKey = keyForCollection||null;
+  if(keyForCollection) markCine(keyForCollection);
+  if(keyForCollection && CINE_MUSIC[keyForCollection]) playCineMusic(keyForCollection);
+  renderCineFrame();
+}
+function renderCineFrame(){
+  SFX.transition();
+  const scene = getScene(ST.cineKey);
+  const reduced = document.body.classList.contains('reduce-fx');
+  const container = document.createElement('div');
+  container.className='cine';
+  container.innerHTML = `
+    <div class="cine-bar top"></div>
+    <div class="cine-bar bottom"></div>
+    <div class="cine-stage" id="cineStage">
+      <div class="cine-layer-far${reduced?'':' kenburns-a'}">${scene.far}</div>
+      <div class="cine-layer-near${reduced?'':' kenburns-b'}">${scene.near}</div>
+      <img class="cine-photo" id="cinePhotoA" alt="">
+      <img class="cine-photo" id="cinePhotoB" alt="">
+      <div class="cine-vignette-local"></div>
+    </div>
+    <div class="lightning" id="lightningFX"></div>
+    ${ST.cineTitle?`<div class="levellabel">${ST.cineTitle}</div>`:''}
+    <div class="cine-subtitle-wrap"><div class="cine-subtitle" id="cineSubtitle"></div></div>
+    <div class="skip" onclick="skipCinematic()">Passer ▶</div>`;
+  document.body.appendChild(container);
+  ST._cineEl = container;
+  ST._currentPhotoName = null;
+  ST._cineActiveLayer = 0;
+  ST._particleHandle = initParticles(container.querySelector('#cineStage'), scene.particle);
+  // photo initiale : celle de la 1ère réplique si précisée, sinon la photo par défaut de la scène
+  const firstImg = (ST.cineQueue[0] && ST.cineQueue[0].img) || scene.type;
+  setCinePhoto(firstImg);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>container.classList.add('letterboxed')));
+  showCineLines(0);
+}
+function triggerBeat(){
+  if(document.body.classList.contains('reduce-fx')) { SFX.transition(); return; }
+  const stage = ST._cineEl && ST._cineEl.querySelector('#cineStage');
+  const flash = ST._cineEl && ST._cineEl.querySelector('#lightningFX');
+  if(stage){ stage.classList.remove('shake-active'); void stage.offsetWidth; stage.classList.add('shake-active'); }
+  if(flash){ flash.classList.remove('on'); void flash.offsetWidth; flash.classList.add('on'); setTimeout(()=>flash.classList.remove('on'),220); }
+  SFX.transition();
+}
+function showCineLines(i){
+  ST.cineIdx = i;
+  if(i>=ST.cineQueue.length){ finishCinematic(); return; }
+  const line = ST.cineQueue[i];
+  const wrap = ST._cineEl.querySelector('.cine-subtitle-wrap');
+  const oldSub = ST._cineEl.querySelector('#cineSubtitle');
+  const fresh = document.createElement('div');
+  fresh.id='cineSubtitle'; fresh.className='cine-subtitle'+(line.radio?' radio':'');
+  fresh.textContent = line.radio ? '📻 '+line.t : line.t;
+  if(oldSub) oldSub.replaceWith(fresh); else wrap.appendChild(fresh);
+  if(line.img) setCinePhoto(line.img);
+  if(line.radio || line.beat) triggerBeat();
+  clearTimeout(ST._cineTimer);
+  const dur = Math.min(5200, Math.max(2200, line.t.length*45));
+  ST._cineTimer = setTimeout(()=>showCineLines(i+1), dur);
+}
+function skipCinematic(){ showCineLines(ST.cineQueue.length); }
+function finishCinematic(){
+  clearTimeout(ST._cineTimer);
+  if(ST._particleHandle){ ST._particleHandle.stop(); ST._particleHandle=null; }
+  if(ST._cineEl){ ST._cineEl.remove(); ST._cineEl=null; }
+  stopCineMusic();
+  const cb = ST.cineOnDone; ST.cineOnDone=null;
+  if(cb) cb();
+}
+
+function playLevelIntro(n){
+  const lvl = levelConf(n);
+  const key = (ST.mode==='halloween'?'H_':'S_')+lvl.key+'_intro';
+  playCinematic(lvl.intro, "NIVEAU "+n+" — "+lvl.title, ()=>startLevelGameplay(n), key);
+}
+function playLevelOutro(n, cb){
+  const lvl = levelConf(n);
+  if(!lvl.outro || lvl.outro.length===0){ cb(); return; }
+  const key = (ST.mode==='halloween'?'H_':'S_')+lvl.key+'_outro';
+  playCinematic(lvl.outro, null, cb, key);
+}
+function playHalloweenOpening(cb){
+  const lines = [
+    {t:"...", img:'ho-etablissement'},
+    {t:"31 OCTOBRE — 23:59", img:'ho-date'},
+    {t:"00:00", img:'ho-minuit'},
+    {t:"Un éclair déchire le ciel et révèle un ancien centre d'examen.", beat:true, img:'ho-eclair'},
+    {t:"Une porte s'ouvre lentement, dans un grincement métallique.", img:'ho-porte'},
+    {t:"« Vous êtes arrivé à temps... »", radio:true, img:'ho-radio'},
+    {t:"LE CENTRE EST OUVERT.", img:'ho-ouvert'}
+  ];
+  ST.mode='halloween';
+  playCinematic(lines, "PROLOGUE — HALLOWEEN", cb, 'H_opening');
+}
+function playVictoryCinematic(){
+  const lines = ST.mode==='halloween' ? HALLOWEEN_VICTORY : STORY_VICTORY;
+  const key = ST.mode==='halloween' ? 'H_victory' : 'S_victory';
+  playCinematic(lines, "ÉPILOGUE", ()=>go('victory'), key);
+}
+
+/* --------------------------- GAMEPLAY --------------------------- */
+function startLevelGameplay(n){
+  ST.level = n;
+  const lvl = levelConf(n);
+  ST.levelQuestions = pickLevelQuestions(lvl.mix);
+  ST.qIndex = 0; ST.hearts = 3; ST.answered=false; ST.streak=0;
+  go('gameplay');
+}
+function currentQ(){ return ST.mode==='free' ? ST.freeQuestions[ST.qIndex] : ST.levelQuestions[ST.qIndex]; }
+function totalQ(){ return ST.mode==='free' ? ST.freeQuestions.length : ST.levelQuestions.length; }
+
+function renderGameplay(){
+  const q = currentQ();
+  if(!q){ // safety
+    if(ST.mode==='free'){ return renderFreeSummary(); }
+    return afterLevelQuestionsDone();
+  }
+  const lvl = ST.mode!=='free' ? levelConf(ST.level) : null;
+  const heartsHtml = '❤️'.repeat(ST.mode==='free'?0:ST.hearts) + '🖤'.repeat(ST.mode==='free'?0:(3-ST.hearts));
+  const pct = Math.round((ST.qIndex)/totalQ()*100);
+  app.innerHTML = `
+  <div class="top-back" onclick="confirmQuit()">✕ Quitter</div>
+  <div class="screen">
+    <div class="wrap">
+      <div class="hud">
+        <div class="badge">${ST.mode==='free'?'MODE LIBRE':'NIVEAU '+ST.level+' — '+lvl.title}</div>
+        ${ST.mode!=='free'?`<div class="hearts">${heartsHtml}</div>`:''}
+        <div class="badge">SCORE : ${ST.score}</div>
+      </div>
+      <div class="progressbar"><div style="width:${pct}%"></div></div>
+      <div class="panel">
+        <div class="scene-flavor">${q.flavor}</div>
+        <span class="question-cat ${q.cat}">${q.cat==='route'?'🚗 SÉCURITÉ ROUTIÈRE':'🚑 PREMIERS SECOURS'}</span>
+        <div class="question-text">${q.q}</div>
+        <div class="answers" id="answersBox">
+          ${q.answers.map((ans,i)=>`<div class="ans-btn" data-i="${i}" onclick="answerQuestion(${i})"><span class="letter">${String.fromCharCode(65+i)}</span><span>${ans}</span></div>`).join('')}
+        </div>
+        <div id="feedbackBox"></div>
+        <div class="streak" id="streakBox">${ST.streak>=2?'🔥 SÉRIE : '+ST.streak+' bonnes réponses !':''}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function answerQuestion(i){
+  if(ST.answered) return;
+  ST.answered = true;
+  const q = currentQ();
+  const boxes = document.querySelectorAll('#answersBox .ans-btn');
+  boxes.forEach(b=>b.classList.add('disabled'));
+  const good = i===q.correct;
+  boxes[q.correct].classList.add('correct');
+  if(!good) boxes[i].classList.add('wrong');
+
+  const fb = document.getElementById('feedbackBox');
+  if(good){
+    SFX.correct();
+    ST.streak++; ST.bestStreakRun = Math.max(ST.bestStreakRun, ST.streak);
+    const base = 100 + (q.dif-1)*40;
+    const streakBonus = ST.streak>=3 ? 50 : 0;
+    ST.score += base + streakBonus;
+    SAVE.stats.correct++;
+    fb.innerHTML = `<div class="feedback ok"><div class="head ok">✅ BONNE RÉPONSE</div><div class="exp">${q.exp}</div></div>`;
+  } else {
+    SFX.wrong();
+    ST.streak=0;
+    SAVE.stats.wrong++;
+    if(ST.mode!=='free'){
+      ST.hearts--;
+      document.querySelector('.hearts') && (document.querySelector('.hearts').textContent = '❤️'.repeat(Math.max(ST.hearts,0))+'🖤'.repeat(3-Math.max(ST.hearts,0)));
+    }
+    fb.innerHTML = `<div class="feedback ko"><div class="head ko">❌ MAUVAISE RÉPONSE</div>
+      <div class="exp"><b>Bonne réponse :</b> ${q.answers[q.correct]}<br>${q.exp}
+      ${ST.mode!=='free' ? '<br><br><i>Une vie a été perdue...</i>' : ''}</div></div>`;
+  }
+  SAVE.stats.bestStreak = Math.max(SAVE.stats.bestStreak, ST.bestStreakRun);
+  persist();
+
+  const cont = document.createElement('button');
+  cont.className='btn primary'; cont.style.marginTop='14px'; cont.textContent='Continuer ▶';
+  cont.onclick = nextStep;
+  fb.appendChild(cont);
+}
+
+function nextStep(){
+  if(ST.mode!=='free' && ST.hearts<=0){ go('defeat'); return; }
+  ST.qIndex++;
+  ST.answered=false;
+  if(ST.qIndex >= totalQ()){
+    if(ST.mode==='free'){ renderFreeSummary(); return; }
+    afterLevelQuestionsDone();
+    return;
+  }
+  render();
+}
+
+function afterLevelQuestionsDone(){
+  // level completed successfully
+  const store = ST.mode==='halloween' ? SAVE.halloween : SAVE.progress;
+  store.unlockedLevel = Math.max(store.unlockedLevel, Math.min(ST.level+1,5));
+  store.bestScore = Math.max(store.bestScore, ST.score);
+  SAVE.score = Math.max(SAVE.score, ST.score);
+  SAVE.stats.gamesPlayed++;
+  persist();
+  playLevelOutro(ST.level, ()=>{
+    if(ST.level>=5){
+      store.completed = true; persist();
+      playVictoryCinematic();
+    } else {
+      const next = ST.level+1;
+      playLevelIntro(next);
+    }
+  });
+}
+
+function confirmQuit(){
+  SFX.click();
+  showModal("Quitter la partie ?", "Votre progression jusqu'au niveau actuel est déjà sauvegardée. Voulez-vous retourner au menu ?", [
+    {label:"Annuler", cls:"ghost"},
+    {label:"Quitter", cls:"danger", action:()=>go('menu')}
+  ]);
+}
+
+/* --------------------------- DEFEAT / VICTORY --------------------------- */
+function renderDefeat(){
+  app.innerHTML = `
+  <div class="screen">
+    <div class="wrap panel">
+      <div class="bigicon">💀</div>
+      <h2 style="text-align:center;">ÉPREUVE ÉCHOUÉE</h2>
+      <p class="small-note" style="text-align:center;">Vous n'avez plus de vies. L'obscurité vous rattrape...</p>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="val">${ST.score}</div><div class="lab">SCORE</div></div>
+        <div class="stat-box"><div class="val">${ST.qIndex+1}/${totalQ()}</div><div class="lab">PROGRESSION</div></div>
+      </div>
+      <button class="btn primary" onclick="retryLevel()">🔁 RECOMMENCER LE NIVEAU</button>
+      <button class="btn ghost" onclick="go('menu')">🏠 RETOUR AU MENU</button>
+    </div>
+  </div>`;
+}
+function retryLevel(){ SFX.click(); startLevelGameplay(ST.level); }
+
+function renderVictory(){
+  const hallo = ST.mode==='halloween';
+  const store = hallo?SAVE.halloween:SAVE.progress;
+  const total = SAVE.stats.correct+SAVE.stats.wrong;
+  const rate = total? Math.round(SAVE.stats.correct/total*100):0;
+  app.innerHTML = `
+  <div class="screen">
+    <div class="wrap panel">
+      <div class="bigicon">🏆</div>
+      <h2 style="text-align:center;">${hallo?"VOUS AVEZ SURVÉCU AU CENTRE":"VOUS AVEZ TERMINÉ L'ÉPREUVE"}</h2>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="val">${ST.score}</div><div class="lab">SCORE FINAL</div></div>
+        <div class="stat-box"><div class="val">${store.bestScore}</div><div class="lab">MEILLEUR SCORE</div></div>
+        <div class="stat-box"><div class="val">${SAVE.stats.correct}</div><div class="lab">BONNES RÉPONSES</div></div>
+        <div class="stat-box"><div class="val">${SAVE.stats.wrong}</div><div class="lab">MAUVAISES RÉPONSES</div></div>
+        <div class="stat-box"><div class="val">${rate}%</div><div class="lab">TAUX DE RÉUSSITE</div></div>
+        <div class="stat-box"><div class="val">${ST.hearts}❤️</div><div class="lab">VIES RESTANTES</div></div>
+      </div>
+      <button class="btn primary" onclick="go('menu')">🏠 RETOUR AU MENU</button>
+      <button class="btn ghost" onclick="go('collection')">📁 VOIR LA COLLECTION</button>
+    </div>
+  </div>`;
+}
+
+/* --------------------------- MODE LIBRE --------------------------- */
+function renderFreeSetup(){
+  app.innerHTML = `
+  <div class="top-back" onclick="go('menu')">← Retour</div>
+  <div class="screen">
+    <div class="wrap panel">
+      <h2>🎯 MODE LIBRE</h2>
+      <p class="small-note">Entraînez-vous librement, sans vies ni pression. Uniquement le contenu du livret officiel.</p>
+      <h3>Catégorie</h3>
+      <div class="seg">
+        <button class="${ST.freeConfig.cat==='route'?'active':''}" onclick="setFreeCat('route')">🚗 Sécurité routière</button>
+        <button class="${ST.freeConfig.cat==='secours'?'active':''}" onclick="setFreeCat('secours')">🚑 Premiers secours</button>
+        <button class="${ST.freeConfig.cat==='mix'?'active':''}" onclick="setFreeCat('mix')">🔀 Mélange</button>
+      </div>
+      <h3>Nombre de questions</h3>
+      <div class="seg">
+        <button class="${ST.freeConfig.count===10?'active':''}" onclick="setFreeCount(10)">10</button>
+        <button class="${ST.freeConfig.count===20?'active':''}" onclick="setFreeCount(20)">20</button>
+        <button class="${ST.freeConfig.count===30?'active':''}" onclick="setFreeCount(30)">30</button>
+        <button class="${ST.freeConfig.count===999?'active':''}" onclick="setFreeCount(999)">Libre ∞</button>
+      </div>
+      <div style="height:14px"></div>
+      <button class="btn primary" onclick="startFreeMode()">▶ COMMENCER L'ENTRAÎNEMENT</button>
+    </div>
+  </div>`;
+}
+function setFreeCat(c){ SFX.click(); ST.freeConfig.cat=c; render(); }
+function setFreeCount(n){ SFX.click(); ST.freeConfig.count=n; render(); }
+function startFreeMode(){
+  SFX.click();
+  ST.mode='free';
+  let pool = ST.freeConfig.cat==='route'?Q_ROUTE : ST.freeConfig.cat==='secours'?Q_SECOURS : QUESTIONS;
+  const n = ST.freeConfig.count===999 ? pool.length*3 : ST.freeConfig.count;
+  // build with repeats allowed if requesting more than pool size (endless-ish)
+  let list = [];
+  while(list.length < n){ list = list.concat(shuffle(pool)); }
+  list = list.slice(0,n);
+  ST.freeQuestions = list.map(q=>{
+    const idxs = shuffle([0,1,2,3]);
+    const answers = idxs.map(i=>q.a[i]);
+    const correct = idxs.indexOf(q.c);
+    const flav = (q.cat==='route'?FLAVOR_ROUTE:FLAVOR_SECOURS);
+    return {...q, answers, correct, flavor: flav[Math.floor(Math.random()*flav.length)]};
+  });
+  ST.qIndex=0; ST.score=0; ST.streak=0; ST.answered=false;
+  go('gameplay');
+}
+function renderFreeSummary(){
+  const total = ST.freeQuestions.length;
+  app.innerHTML = `
+  <div class="screen">
+    <div class="wrap panel">
+      <div class="bigicon">📊</div>
+      <h2 style="text-align:center;">ENTRAÎNEMENT TERMINÉ</h2>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="val">${ST.score}</div><div class="lab">SCORE</div></div>
+        <div class="stat-box"><div class="val">${total}</div><div class="lab">QUESTIONS</div></div>
+      </div>
+      <button class="btn primary" onclick="go('free-setup')">🔁 REJOUER</button>
+      <button class="btn ghost" onclick="go('menu')">🏠 MENU</button>
+    </div>
+  </div>`;
+  SAVE.stats.gamesPlayed++; persist();
+}
+
+/* --------------------------- COLLECTION --------------------------- */
+const COLLECTION_ITEMS = [
+  {key:'S_l1_intro', label:"Niveau 1 — Le Signal (intro)"},
+  {key:'S_l1_outro', label:"Niveau 1 — Le Signal (fin)"},
+  {key:'S_l2_intro', label:"Niveau 2 — La Route Morte (intro)"},
+  {key:'S_l2_outro', label:"Niveau 2 — La Route Morte (fin)"},
+  {key:'S_l3_intro', label:"Niveau 3 — La Zone de Secours (intro)"},
+  {key:'S_l3_outro', label:"Niveau 3 — La Zone de Secours (fin)"},
+  {key:'S_l4_intro', label:"Niveau 4 — Le Centre Abandonné (intro)"},
+  {key:'S_l4_outro', label:"Niveau 4 — Le Centre Abandonné (fin)"},
+  {key:'S_l5_intro', label:"Niveau 5 — L'Épreuve Finale (intro)"},
+  {key:'S_victory', label:"Épilogue — Fin de l'aventure"},
+  {key:'H_opening', label:"🎃 Prologue Halloween"},
+  {key:'H_h1_intro', label:"🎃 Niveau 1 — La Porte"},
+  {key:'H_h2_intro', label:"🎃 Niveau 2 — Le Couloir"},
+  {key:'H_h3_intro', label:"🎃 Niveau 3 — La Salle d'Examen"},
+  {key:'H_h4_intro', label:"🎃 Niveau 4 — Les Archives"},
+  {key:'H_h5_intro', label:"🎃 Niveau 5 — La Dernière Épreuve"},
+  {key:'H_victory', label:"🎃 Épilogue Halloween"},
+];
+function renderCollection(){
+  app.innerHTML = `
+  <div class="top-back" onclick="go('menu')">← Retour</div>
+  <div class="screen">
+    <div class="wrap">
+      <div class="panel">
+        <h2>📁 COLLECTION</h2>
+        <p class="small-note">Retrouvez ici les cinématiques déjà découvertes durant votre aventure.</p>
+        <div style="height:10px"></div>
+        ${COLLECTION_ITEMS.map(it=>{
+          const seen = SAVE.cinematicsSeen.includes(it.key);
+          return `<div class="collection-item ${seen?'':'locked'}" onclick="${seen?`replayCollection('${it.key}')`:''}">
+            <span>${seen?'🎬 ':'🔒 '}${it.label}</span>
+            <span>${seen?'▶':''}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+function findLinesForKey(key){
+  const all = [
+    ...STORY_LEVELS.map(l=>({k:'S_'+l.key+'_intro', lines:l.intro, title:'NIVEAU '+l.id+' — '+l.title})),
+    ...STORY_LEVELS.map(l=>({k:'S_'+l.key+'_outro', lines:l.outro, title:null})),
+    ...HALLOWEEN_LEVELS.map(l=>({k:'H_'+l.key+'_intro', lines:l.intro, title:'NIVEAU '+l.id+' — '+l.title})),
+    ...HALLOWEEN_LEVELS.map(l=>({k:'H_'+l.key+'_outro', lines:l.outro, title:null})),
+    {k:'S_victory', lines:STORY_VICTORY, title:'ÉPILOGUE'},
+    {k:'H_victory', lines:HALLOWEEN_VICTORY, title:'ÉPILOGUE'},
+    {k:'H_opening', lines:[
+      {t:"..."},{t:"31 OCTOBRE — 23:59"},{t:"00:00"},
+      {t:"Un éclair déchire le ciel et révèle un ancien centre d'examen."},
+      {t:"Une porte s'ouvre lentement, dans un grincement métallique."},
+      {t:"« Vous êtes arrivé à temps... »", radio:true},
+      {t:"LE CENTRE EST OUVERT."}
+    ], title:'PROLOGUE — HALLOWEEN'},
+  ];
+  return all.find(x=>x.k===key);
+}
+function replayCollection(key){
+  SFX.click();
+  const found = findLinesForKey(key);
+  if(!found || !found.lines || found.lines.length===0) return;
+  playCinematic(found.lines, found.title, ()=>go('collection'), key);
+}
+
+/* --------------------------- SETTINGS --------------------------- */
+function renderSettings(){
+  const s = SAVE.settings;
+  app.innerHTML = `
+  <div class="top-back" onclick="go('menu')">← Retour</div>
+  <div class="screen">
+    <div class="wrap panel">
+      <h2>⚙ PARAMÈTRES</h2>
+      <div class="setting-row"><label>🔊 Volume musique</label><input type="range" min="0" max="100" value="${s.musicVol}" oninput="updateSetting('musicVol', this.value)"></div>
+      <div class="setting-row"><label>🔊 Volume effets</label><input type="range" min="0" max="100" value="${s.sfxVol}" oninput="updateSetting('sfxVol', this.value)"></div>
+      <div class="setting-row"><label>🎞️ Animations</label><div class="toggle ${s.animations?'on':''}" onclick="toggleSetting('animations')"><span></span></div></div>
+      <div class="setting-row"><label>👁️ Réduire les effets visuels</label><div class="toggle ${s.reduceEffects?'on':''}" onclick="toggleSetting('reduceEffects')"><span></span></div></div>
+      <div class="setting-row"><label>🔆 Contraste</label>
+        <div class="seg" style="width:150px;">
+          <button class="${s.contrast==='normal'?'active':''}" onclick="setSetting('contrast','normal')">Normal</button>
+          <button class="${s.contrast==='high'?'active':''}" onclick="setSetting('contrast','high')">Élevé</button>
+        </div>
+      </div>
+      <div class="setting-row"><label>🔤 Taille du texte</label>
+        <div class="seg" style="width:150px;">
+          <button class="${s.textSize==='normal'?'active':''}" onclick="setSetting('textSize','normal')">Normal</button>
+          <button class="${s.textSize==='large'?'active':''}" onclick="setSetting('textSize','large')">Grand</button>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+      <h3>💾 Sauvegarde</h3>
+      <button class="btn ghost" onclick="exportSave()">💾 EXPORTER MA SAUVEGARDE (.json)</button>
+      <button class="btn ghost" onclick="document.getElementById('importFile').click()">📥 IMPORTER MA SAUVEGARDE</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importSaveFile(this.files[0])">
+      <button class="btn danger" onclick="confirmReset()">🗑️ RÉINITIALISER MA SAUVEGARDE</button>
+    </div>
+  </div>`;
+}
+function updateSetting(key,val){ SAVE.settings[key]=parseInt(val); persist(); if(key==='musicVol') setCineMusicVolume(SAVE.settings[key]); }
+function toggleSetting(key){ SFX.click(); SAVE.settings[key]=!SAVE.settings[key]; persist(); render(); }
+function setSetting(key,val){ SFX.click(); SAVE.settings[key]=val; persist(); render(); }
+
+function exportSave(){
+  SFX.click();
+  const blob = new Blob([JSON.stringify(SAVE,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download='albain-horror-save.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+function importSaveFile(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      showModal("Importer la sauvegarde ?", "Cette action va écraser votre sauvegarde actuelle sur cet appareil. Voulez-vous continuer ?", [
+        {label:"Annuler", cls:"ghost"},
+        {label:"Importer", cls:"primary", action:()=>{
+          SAVE = Object.assign(defaultSave(), data);
+          persist(); render();
+        }}
+      ]);
+    }catch(err){ alert("Fichier de sauvegarde invalide."); }
+  };
+  reader.readAsText(file);
+}
+function confirmReset(){
+  SFX.click();
+  showModal("Réinitialiser la sauvegarde ?", "Toute votre progression (niveaux, score, collection) sera définitivement supprimée sur cet appareil.", [
+    {label:"Annuler", cls:"ghost"},
+    {label:"Continuer", cls:"danger", action:()=>{
+      showModal("Confirmation finale", "Êtes-vous vraiment sûr ? Cette action est irréversible.", [
+        {label:"Annuler", cls:"ghost"},
+        {label:"RÉINITIALISER", cls:"danger", action:()=>{ SAVE = defaultSave(); persist(); go('menu'); }}
+      ]);
+    }}
+  ]);
+}
+
+/* --------------------------- MODAL --------------------------- */
+function showModal(title, text, buttons){
+  const bg = document.createElement('div');
+  bg.className='modal-bg';
+  bg.innerHTML = `<div class="modal">
+    <h3 style="margin-top:0;color:var(--gold);">${title}</h3>
+    <p class="small-note">${text}</p>
+    <div class="btn-row" id="modalBtns"></div>
+  </div>`;
+  document.body.appendChild(bg);
+  const row = bg.querySelector('#modalBtns');
+  buttons.forEach(b=>{
+    const btn=document.createElement('button');
+    btn.className='btn '+(b.cls||'');
+    btn.textContent=b.label;
+    btn.onclick=()=>{ bg.remove(); if(b.action) b.action(); };
+    row.appendChild(btn);
+  });
+}
+
+/* --------------------------- ORIENTATION HINT --------------------------- */
+function checkOrientation(){
+  const suggest = ST.screen==='gameplay' && window.innerWidth < window.innerHeight && window.innerWidth < 480;
+  document.body.classList.toggle('suggest-landscape', false); // non bloquant, désactivé par défaut pour rester simple
+}
+window.addEventListener('orientationchange', checkOrientation);
+
+/* --------------------------- INIT --------------------------- */
+document.addEventListener('click', ()=>{ ensureAudio(); }, {once:true});
+applyThemeClass();
+applySettingsToDOM();
+render();
+setInterval(()=>{ applyThemeClass(); }, 60*1000); // vérifie la date chaque minute
+</script>
+</body>
+</html>
